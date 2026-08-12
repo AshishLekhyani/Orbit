@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-base: #0d0e10;
+  --color-bg-panel: #0f1013;
+  --color-bg-editor: #101114;
+  --color-bg-raised: #16171b;
+
+  --color-border-subtle: #1c1e22;
+  --color-border-strong: #2a2c31;
+
+  --color-text-primary: #e9e8e4;
+  --color-text-secondary: #8b8c90;
+  --color-text-tertiary: #9a9b9f;
+  --color-text-muted: #6e7075;
+  --color-text-faint: #55585e;
+  --color-text-dim: #7a7c82;
+
+  --color-accent: #e8833a;
+  --color-accent-hover: #f0954f;
+
+  --color-ok: #6ea57e;
+  --color-warn: #d9a85c;
+  --color-danger: #c46b6b;
+
+  --color-collab-1: #6e9bd8;
+  --color-collab-2: #c98a6a;
+  --color-collab-3: #8fb894;
+  --color-collab-4: #c9a0c9;
+  --color-collab-5: #d9c15c;
+
+  --color-syntax-comment: #5c5f66;
+  --color-syntax-keyword: #e0898b;
+  --color-syntax-string: #a9c48e;
+  --color-syntax-number: #d9a85c;
+  --color-syntax-function: #8fb8d9;
+  --color-syntax-property: #8fb8d9;
+  --color-syntax-punctuation: #7a7c82;
+  --color-syntax-plain: #c9c8c4;
+  --color-syntax-tag: #e0898b;
+  --color-syntax-attr: #d9a85c;
+  --color-syntax-at: #c9a0c9;
+
+  --font-sans: var(--font-ibm-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --text-display: 38px;
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.035em;
+
+  --text-title: 22px;
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.02em;
+
+  --text-body: 13.5px;
+  --text-body--line-height: 1.6;
+
+  --text-ui: 12.5px;
+  --text-ui--line-height: 1.4;
+
+  --text-label: 10.5px;
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.12em;
+
+  --text-code: 13px;
+  --text-code--line-height: 21px;
+
+  --text-meta: 10.5px;
+  --text-meta--line-height: 1.5;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 11px;
+}
+
+html,
+body {
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgb(232 131 58 / 0.28);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3d44;
+  background-clip: content-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

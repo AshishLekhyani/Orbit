@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ProjectRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum FileType {
+  HTML
+  CSS
+  JS
+  JSON
+  MARKDOWN
+  OTHER
+}
+
+enum StackType {
+  HTML_CSS_JS
+}
+
+enum ChangeType {
+  ADDED
+  MODIFIED
+  DELETED
+}
+
+model Profile {
+  id          String   @id
+  email       String   @unique
+  displayName String?
+  avatarUrl   String?
+  settings    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ownedProjects    Project[]        @relation("ProjectOwner")
+  memberships      ProjectMember[]
+  authoredVersions ProjectVersion[]
+
+  @@map("profiles")
+}
+
+model Project {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  stack       StackType @default(HTML_CSS_JS)
+  ownerId     String
+  owner       Profile   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  members    ProjectMember[]
+  files      File[]
+  versions   ProjectVersion[]
+  shareLinks ShareLink[]
+
+  @@index([ownerId])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(uuid())
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      ProjectRole
+  createdAt DateTime    @default(now())
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+model File {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  path        String
+  name        String
+  type        FileType
+  isDirectory Boolean  @default(false)
+  content     String   @default("")
+  yjsState    Bytes?
+  parentId    String?
+  parent      File?    @relation("FileTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    File[]   @relation("FileTree")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, path])
+  @@index([projectId])
+  @@index([parentId])
+  @@map("files")
+}
+
+model ProjectVersion {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    Profile? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  message   String
+  createdAt DateTime @default(now())
+
+  fileSnapshots VersionFileSnapshot[]
+
+  @@index([projectId, createdAt])
+  @@map("project_versions")
+}
+
+model VersionFileSnapshot {
+  id         String         @id @default(uuid())
+  versionId  String
+  version    ProjectVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  fileId     String?
+  path       String
+  content    String?
+  changeType ChangeType
+  createdAt  DateTime       @default(now())
+
+  @@index([versionId])
+  @@map("version_file_snapshots")
+}
+
+model ShareLink {
+  id          String      @id @default(uuid())
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  token       String      @unique
+  permission  ProjectRole
+  createdById String
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([projectId])
+  @@map("share_links")
+}
