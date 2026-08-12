@@ -1,0 +1,7 @@
+ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."projects" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."project_members" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."files" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."project_versions" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."version_file_snapshots" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."share_links" ENABLE ROW LEVEL SECURITY;

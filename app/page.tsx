@@ -1,15 +1,19 @@
-export default function Home() {
+import { LandingHeader } from "@/components/landing/LandingHeader";
+import { Hero } from "@/components/landing/Hero";
+import { EditorShowcase } from "@/components/landing/EditorShowcase";
+import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { LandingFooter } from "@/components/landing/LandingFooter";
+
+export default function LandingPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-bg-base">
-      <div className="flex items-center gap-2.5">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <rect x="1" y="1" width="22" height="22" rx="5" fill="#17181C" stroke="#2A2C31" />
-          <path d="M12 4.5 L19 12 L12 19.5 L5 12 Z" fill="none" stroke="#E8833A" strokeWidth="1.6" />
-          <rect x="8" y="11.1" width="8" height="1.8" fill="#E8833A" />
-        </svg>
-        <span className="text-title font-semibold text-text-primary">Orbit</span>
-      </div>
-      <p className="text-body text-text-secondary">Build together. Right in your browser.</p>
-    </main>
+    <div className="flex min-h-screen flex-col bg-[radial-gradient(1100px_520px_at_50%_-12%,#17181C_0%,#0D0E10_62%)]">
+      <LandingHeader />
+      <main className="flex flex-1 flex-col items-center">
+        <Hero />
+        <EditorShowcase />
+      </main>
+      <FeaturesSection />
+      <LandingFooter />
+    </div>
   );
 }

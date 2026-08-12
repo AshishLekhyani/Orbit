@@ -116,6 +116,7 @@ model ProjectVersion {
   fileSnapshots VersionFileSnapshot[]
 
   @@index([projectId, createdAt])
+  @@index([authorId])
   @@map("project_versions")
 }
 

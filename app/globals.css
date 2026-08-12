@@ -18,10 +18,12 @@
 
   --color-accent: #e8833a;
   --color-accent-hover: #f0954f;
+  --color-on-accent: #17110b;
 
   --color-ok: #6ea57e;
   --color-warn: #d9a85c;
   --color-danger: #c46b6b;
+  --color-danger-text: #e0898b;
 
   --color-collab-1: #6e9bd8;
   --color-collab-2: #c98a6a;
@@ -72,6 +74,7 @@
   --radius-sm: 6px;
   --radius-md: 9px;
   --radius-lg: 11px;
+  --radius-btn: 7px;
 }
 
 html,
