@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0D0E10; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #E9E8E4; -webkit-font-smoothing: antialiased; }
+  a { color: #E8833A; text-decoration: none; }
+  a:hover { color: #F2A164; }
+  button, input, select { font-family: inherit; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #2A2C31; border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+  @keyframes forgeToast { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; background: #0D0E10; padding: 56px 40px 96px;">
+<div style="max-width: 1080px; margin: 0 auto;">
+
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="1" y="1" width="22" height="22" rx="5" fill="#17181C" stroke="#2A2C31"></rect><path d="M12 4.5 L19 12 L12 19.5 L5 12 Z" fill="none" stroke="#E8833A" stroke-width="1.6"></path><rect x="8" y="11.1" width="8" height="1.8" fill="#E8833A"></rect></svg>
+    <span style="font-size: 16px; font-weight: 600;">Forge</span>
+    <span style="font-size: 16px; color: #45474D;">/</span>
+    <span style="font-size: 16px; color: #8B8C90;">Design system</span>
+  </div>
+  <p style="margin: 18px 0 0; max-width: 62ch; font-size: 14px; line-height: 1.65; color: #8B8C90;">Dark-first tokens and components for a browser-based development environment. One accent, four neutral surfaces, 1px borders, and a syntax palette tuned for long sessions. <a href="Forge.dc.html">Open the application →</a></p>
+
+  <div style="height: 1px; background: #1C1E22; margin: 44px 0 0;"></div>
+
+  <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #6E7075; margin: 40px 0 16px;">Logo</div>
+  <div style="display: flex; align-items: flex-end; gap: 34px; padding: 26px 24px; border: 1px solid #1F2126; border-radius: 10px; background: #121316;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="1" y="1" width="22" height="22" rx="5" fill="#17181C" stroke="#2A2C31"></rect><path d="M12 4.5 L19 12 L12 19.5 L5 12 Z" fill="none" stroke="#E8833A" stroke-width="2"></path><rect x="8" y="11" width="8" height="2" fill="#E8833A"></rect></svg>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="1" y="1" width="22" height="22" rx="5" fill="#17181C" stroke="#2A2C31"></rect><path d="M12 4.5 L19 12 L12 19.5 L5 12 Z" fill="none" stroke="#E8833A" stroke-width="1.6"></path><rect x="8" y="11.1" width="8" height="1.8" fill="#E8833A"></rect></svg>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="1" y="1" width="22" height="22" rx="5" fill="#17181C" stroke="#2A2C31"></rect><path d="M12 4.5 L19 12 L12 19.5 L5 12 Z" fill="none" stroke="#E8833A" stroke-width="1.4"></path><rect x="8" y="11.2" width="8" height="1.6" fill="#E8833A"></rect></svg>
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none"><rect x="1" y="1" width="22" height="22" rx="5" fill="#17181C" stroke="#2A2C31"></rect><path d="M12 4.5 L19 12 L12 19.5 L5 12 Z" fill="none" stroke="#E8833A" stroke-width="1.2"></path><rect x="8" y="11.3" width="8" height="1.4" fill="#E8833A"></rect></svg>
+    <div style="margin-left: auto; max-width: 30ch; font-size: 12.5px; line-height: 1.6; color: #6E7075;">An anvil face inside a struck diamond. Geometric, single-weight, legible from 16px to favicon.</div>
+  </div>
+
+  <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #6E7075; margin: 44px 0 16px;">Color</div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+    <sc-for list="{{ swatches }}" as="c" hint-placeholder-count="10">
+      <div style="border: 1px solid #1F2126; border-radius: 9px; overflow: hidden; background: #121316;">
+        <div style="height: 58px; background: {{ c.hex }}; border-bottom: 1px solid #1F2126;"></div>
+        <div style="padding: 10px 11px;">
+          <div style="font-size: 12px; color: #E9E8E4;">{{ c.name }}</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6E7075; margin-top: 3px;">{{ c.hex }}</div>
+          <div style="font-size: 10.5px; color: #55585E; margin-top: 5px;">{{ c.use }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #6E7075; margin: 44px 0 16px;">Syntax</div>
+  <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 12px;">
+    <div style="border: 1px solid #1F2126; border-radius: 9px; background: #101114; padding: 18px 20px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 21px;">
+      <div><span style="color: #5C5F66;">// Entry point.</span></div>
+      <div><span style="color: #E0898B;">function</span><span style="color: #8FB8D9;"> render</span><span style="color: #7A7C82;">(</span><span style="color: #C9C8C4;">root</span><span style="color: #7A7C82;">) {</span></div>
+      <div><span style="color: #C9C8C4;">&nbsp;&nbsp;root.innerHTML </span><span style="color: #7A7C82;">=</span><span style="color: #C9C8C4;"> PROJECTS.</span><span style="color: #8FB8D9;">map</span><span style="color: #7A7C82;">(</span><span style="color: #C9C8C4;">card</span><span style="color: #7A7C82;">).</span><span style="color: #8FB8D9;">join</span><span style="color: #7A7C82;">(</span><span style="color: #A9C48E;">""</span><span style="color: #7A7C82;">)</span></div>
+      <div><span style="color: #C9C8C4;">&nbsp;&nbsp;console.</span><span style="color: #8FB8D9;">log</span><span style="color: #7A7C82;">(</span><span style="color: #A9C48E;">"rendered"</span><span style="color: #7A7C82;">,</span><span style="color: #D9A85C;"> 4</span><span style="color: #7A7C82;">)</span></div>
+      <div><span style="color: #7A7C82;">}</span></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-content: start;">
+      <sc-for list="{{ syntax }}" as="t" hint-placeholder-count="8">
+        <div style="display: flex; align-items: center; gap: 9px; border: 1px solid #1F2126; border-radius: 7px; background: #121316; padding: 9px 11px;">
+          <span style="width: 10px; height: 10px; border-radius: 2px; background: {{ t.hex }}; display: block; flex: none;"></span>
+          <span style="font-size: 11.5px; color: #C9C8C4;">{{ t.name }}</span>
+          <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #6E7075;">{{ t.hex }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #6E7075; margin: 44px 0 16px;">Typography</div>
+  <div style="border: 1px solid #1F2126; border-radius: 10px; background: #121316; padding: 8px 22px;">
+    <sc-for list="{{ type }}" as="t" hint-placeholder-count="6">
+      <div style="display: flex; align-items: baseline; gap: 24px; padding: 15px 0; border-bottom: 1px solid #1C1E22;">
+        <span style="width: 150px; flex: none; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6E7075;">{{ t.token }}</span>
+        <span style="font-family: {{ t.family }}; font-size: {{ t.size }}; font-weight: {{ t.weight }}; letter-spacing: {{ t.tracking }}; color: #E9E8E4; flex: 1;">{{ t.sample }}</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #55585E; flex: none;">{{ t.spec }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #6E7075; margin: 44px 0 16px;">Buttons</div>
+  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 22px 24px; border: 1px solid #1F2126; border-radius: 10px; background: #121316;">
+    <button style="font-size: 13px; font-weight: 500; color: #17110B; background: #E8833A; border: none; border-radius: 7px; padding: 8px 15px; cursor: pointer;" style-hover="background: #F0954F;">Primary</button>
+    <button style="font-size: 13px; color: #E9E8E4; background: #17191D; border: 1px solid #2A2C31; border-radius: 7px; padding: 8px 15px; cursor: pointer;" style-hover="background: #1E2025; border-color: #3A3D44;">Secondary</button>
+    <button style="font-size: 13px; color: #9A9B9F; background: transparent; border: 1px solid transparent; border-radius: 7px; padding: 8px 15px; cursor: pointer;" style-hover="background: #17191D; color: #E9E8E4;">Ghost</button>
+    <button style="font-size: 13px; color: #E0898B; background: transparent; border: 1px solid #3A2A2C; border-radius: 7px; padding: 8px 15px; cursor: pointer;" style-hover="background: #1E1618;">Destructive</button>
+    <button disabled="{{ yes }}" style="font-size: 13px; color: #4A4C52; background: #141518; border: 1px solid #22242A; border-radius: 7px; padding: 8px 15px; cursor: not-allowed;">Disabled</button>
+    <button style="font-size: 13px; color: #E9E8E4; background: #17191D; border: 1px solid #E8833A; border-radius: 7px; padding: 8px 15px; cursor: pointer; box-shadow: 0 0 0 3px rgba(232,131,58,0.16);">Focused</button>
+    <div style="width: 1px; height: 26px; background: #22242A;"></div>
+    <button style="display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; color: #17110B; background: #E8833A; border: none; border-radius: 6px; padding: 6px 11px; cursor: pointer;" style-hover="background: #F0954F;">Run<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; opacity: 0.7;">⌘↵</span></button>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #9A9B9F; border: 1px solid #2A2C31; border-radius: 5px; padding: 3px 7px; background: #101114;">⌘K</span>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #9A9B9F; border: 1px solid #2A2C31; border-radius: 5px; padding: 3px 7px; background: #101114;">⇧⌘F</span>
+  </div>
+
+  <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #6E7075; margin: 44px 0 16px;">Inputs, tabs, avatars</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div style="border: 1px solid #1F2126; border-radius: 10px; background: #121316; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px;">
+      <input placeholder="Default input" style="height: 34px; padding: 0 11px; font-size: 12.5px; color: #E9E8E4; background: #101114; border: 1px solid #2A2C31; border-radius: 7px; outline: none;" style-focus="border-color: #E8833A; box-shadow: 0 0 0 3px rgba(232,131,58,0.14);" />
+      <input value="Focused" readOnly="{{ yes }}" style="height: 34px; padding: 0 11px; font-size: 12.5px; color: #E9E8E4; background: #101114; border: 1px solid #E8833A; border-radius: 7px; outline: none; box-shadow: 0 0 0 3px rgba(232,131,58,0.14);" />
+      <input value="Disabled" disabled="{{ yes }}" style="height: 34px; padding: 0 11px; font-size: 12.5px; color: #4A4C52; background: #141518; border: 1px solid #22242A; border-radius: 7px; outline: none;" />
+      <select style="height: 34px; font-size: 12.5px; color: #E9E8E4; background: #101114; border: 1px solid #2A2C31; border-radius: 7px; padding: 0 8px; outline: none; cursor: pointer;">
+        <option value="Editor">Editor</option>
+        <option value="Viewer">Viewer</option>
+      </select>
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+        <span style="width: 26px; height: 26px; border-radius: 50%; background: #E8833A; color: #17110B; font-size: 10px; font-weight: 600; display: grid; place-items: center;">AL</span>
+        <span style="width: 26px; height: 26px; border-radius: 50%; background: #6E9BD8; color: #0D0E10; font-size: 10px; font-weight: 600; display: grid; place-items: center; margin-left: -14px; border: 2px solid #121316;">RS</span>
+        <span style="width: 26px; height: 26px; border-radius: 50%; background: #C98A6A; color: #0D0E10; font-size: 10px; font-weight: 600; display: grid; place-items: center; margin-left: -14px; border: 2px solid #121316;">MO</span>
+        <span style="font-size: 11.5px; color: #6E7075; margin-left: 6px;">+2 in this project</span>
+      </div>
+    </div>
+    <div style="border: 1px solid #1F2126; border-radius: 10px; background: #121316; overflow: hidden;">
+      <div style="height: 35px; display: flex; align-items: stretch; border-bottom: 1px solid #1C1E22; background: #0F1013;">
+        <div style="display: flex; align-items: center; gap: 8px; padding: 0 13px; border-right: 1px solid #1C1E22; background: #101114; box-shadow: inset 0 2px 0 #E8833A;"><span style="font-size: 12px; color: #E9E8E4;">main.js</span><span style="font-size: 11px; color: #E8833A;">●</span></div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 0 13px; border-right: 1px solid #1C1E22;"><span style="font-size: 12px; color: #7A7C82;">global.css</span><span style="font-size: 11px; color: #55585E;">✕</span></div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 0 13px; border-right: 1px solid #1C1E22;"><span style="font-size: 12px; color: #7A7C82;">index.html</span></div>
+      </div>
+      <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 9px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px;"><span style="color: #E0898B;">✕</span><span style="color: #C9C8C4;">ReferenceError: renderStats is not defined</span><span style="margin-left: auto; color: #55585E;">main.js:22</span></div>
+        <div style="display: flex; align-items: center; gap: 9px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px;"><span style="color: #D9A85C;">⚠</span><span style="color: #C9C8C4;">Unknown property "text-wrap"</span><span style="margin-left: auto; color: #55585E;">global.css:42</span></div>
+        <div style="display: flex; align-items: center; gap: 9px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px;"><span style="color: #45474D;">›</span><span style="color: #C9C8C4;">App initialized</span></div>
+        <div style="display: flex; align-items: center; gap: 9px; margin-top: 4px;">
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #6EA57E;"><span style="width: 5px; height: 5px; border-radius: 50%; background: #6EA57E; display: block;"></span>Synced</span>
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #D9A85C;"><span style="width: 5px; height: 5px; border-radius: 50%; background: #D9A85C; display: block;"></span>Syncing…</span>
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #C46B6B;"><span style="width: 5px; height: 5px; border-radius: 50%; background: #C46B6B; display: block;"></span>Offline</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #6E7075; margin: 44px 0 16px;">Overlays</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; align-items: start;">
+    <div style="border: 1px solid #2A2C31; border-radius: 8px; background: #16171B; padding: 5px; box-shadow: 0 16px 40px rgba(0,0,0,0.55);">
+      <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #C9C8C4; padding: 6px 8px; border-radius: 5px; background: #22242A;">New file<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #55585E;">⌘N</span></div>
+      <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #C9C8C4; padding: 6px 8px;">Rename<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #55585E;">F2</span></div>
+      <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #C9C8C4; padding: 6px 8px;">Duplicate</div>
+      <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #C46B6B; padding: 6px 8px;">Delete<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #55585E;">⌫</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 9px; background: #16171B; border: 1px solid #2A2C31; border-left: 2px solid #6E9BD8; border-radius: 7px; padding: 9px 13px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); animation: forgeToast 200ms ease-out;">
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: #6E9BD8; display: block;"></span>
+        <span style="font-size: 12.5px; color: #E9E8E4;">Rahul joined the project</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; background: #16171B; border: 1px solid #2A2C31; border-left: 2px solid #E8833A; border-radius: 7px; padding: 9px 13px; box-shadow: 0 12px 32px rgba(0,0,0,0.5);">
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: #E8833A; display: block;"></span>
+        <span style="font-size: 12.5px; color: #E9E8E4;">All changes saved</span>
+        <span style="font-size: 11.5px; color: #7A7C82;">⌘S</span>
+      </div>
+      <div style="border: 1px solid #2A2C31; border-radius: 7px; background: #1B1D21; padding: 7px 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: fit-content;">
+        <div style="font-size: 11.5px; color: #E9E8E4; font-weight: 500;">Rahul Sharma</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #8B8C90; margin-top: 2px;">Editing src/main.js</div>
+      </div>
+    </div>
+    <div style="border: 1px solid #2E3036; border-radius: 9px; background: #16171B; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+      <div style="display: flex; align-items: center; gap: 9px; padding: 0 12px; border-bottom: 1px solid #22242A;">
+        <span style="color: #E8833A; font-family: 'JetBrains Mono', monospace; font-size: 12px;">›</span>
+        <span style="flex: 1; height: 38px; line-height: 38px; font-size: 13px; color: #55585E;">Search commands…</span>
+      </div>
+      <div style="padding: 6px;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 6px; background: #22242A;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #E8833A; width: 12px;">▶</span><span style="font-size: 12.5px; color: #E9E8E4;">Run Project</span><span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #6E7075;">⌘↵</span></div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 7px 9px;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #55585E; width: 12px;">+</span><span style="font-size: 12.5px; color: #C9C8C4;">New File</span><span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #6E7075;">⌘N</span></div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 7px 9px;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #55585E; width: 12px;">↺</span><span style="font-size: 12.5px; color: #C9C8C4;">Version History</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #6E7075; margin: 44px 0 16px;">States</div>
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+    <div style="border: 1px solid #1F2126; border-radius: 10px; background: #121316; padding: 26px 22px; text-align: center;">
+      <div style="font-size: 13.5px; font-weight: 500; color: #C9C8C4;">No file open</div>
+      <div style="font-size: 12px; color: #6E7075; margin: 6px 0 14px;">Select a file from the explorer or create a new one.</div>
+      <button style="font-size: 12.5px; color: #E9E8E4; background: #17191D; border: 1px solid #2A2C31; border-radius: 6px; padding: 6px 13px; cursor: pointer;">+ New file</button>
+    </div>
+    <div style="border: 1px solid #1F2126; border-radius: 10px; background: #121316; padding: 22px;">
+      <div style="height: 12px; width: 60%; border-radius: 4px; background: #1A1C20; margin-bottom: 10px;"></div>
+      <div style="height: 12px; width: 85%; border-radius: 4px; background: #1A1C20; margin-bottom: 10px;"></div>
+      <div style="height: 12px; width: 40%; border-radius: 4px; background: #1A1C20; margin-bottom: 18px;"></div>
+      <div style="height: 56px; border-radius: 7px; background: #17181C;"></div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #55585E; margin-top: 12px;">skeleton — dashboard, editor, history</div>
+    </div>
+    <div style="border: 1px solid #3A2A2C; border-radius: 10px; background: #121316; padding: 22px;">
+      <div style="font-size: 13px; font-weight: 600; color: #E9E8E4;">Connection lost</div>
+      <div style="font-size: 12px; color: #8B8C90; line-height: 1.6; margin: 7px 0 14px;">Your changes are saved locally. Trying to reconnect…</div>
+      <div style="display: flex; gap: 8px;">
+        <button style="font-size: 12px; color: #17110B; background: #E8833A; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Retry now</button>
+        <button style="font-size: 12px; color: #E9E8E4; background: #17191D; border: 1px solid #2A2C31; border-radius: 6px; padding: 6px 12px; cursor: pointer;">Work offline</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: #6E7075; margin: 44px 0 16px;">Spacing &amp; radius</div>
+  <div style="display: flex; flex-wrap: wrap; gap: 26px; padding: 22px 24px; border: 1px solid #1F2126; border-radius: 10px; background: #121316;">
+    <sc-for list="{{ scale }}" as="v" hint-placeholder-count="6">
+      <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
+        <div style="height: 26px; width: {{ v.w }}; background: rgba(232,131,58,0.3); border-left: 2px solid #E8833A;"></div>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6E7075;">{{ v.label }}</span>
+      </div>
+    </sc-for>
+    <div style="display: flex; gap: 12px; margin-left: auto;">
+      <sc-for list="{{ radii }}" as="r" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+          <div style="width: 40px; height: 40px; border: 1px solid #2A2C31; background: #17181C; border-radius: {{ r.r }};"></div>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6E7075;">{{ r.r }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true,
+      swatches: [
+        { name: 'bg/base', hex: '#0D0E10', use: 'Application background' },
+        { name: 'bg/panel', hex: '#0F1013', use: 'Explorer, preview, console' },
+        { name: 'bg/editor', hex: '#101114', use: 'Editor surface' },
+        { name: 'bg/raised', hex: '#16171B', use: 'Menus, palette, toasts' },
+        { name: 'border/subtle', hex: '#1C1E22', use: '1px structural lines' },
+        { name: 'border/strong', hex: '#2A2C31', use: 'Controls, dividers' },
+        { name: 'text/primary', hex: '#E9E8E4', use: 'Titles, active items' },
+        { name: 'text/secondary', hex: '#8B8C90', use: 'Body, descriptions' },
+        { name: 'text/muted', hex: '#55585E', use: 'Meta, gutter, hints' },
+        { name: 'accent', hex: '#E8833A', use: 'Active, focus, primary' },
+        { name: 'ok', hex: '#6EA57E', use: 'Synced, added lines' },
+        { name: 'warn', hex: '#D9A85C', use: 'Warnings, syncing' },
+        { name: 'danger', hex: '#C46B6B', use: 'Errors, destructive' },
+        { name: 'user/rahul', hex: '#6E9BD8', use: 'Collaborator cursor' },
+        { name: 'user/mira', hex: '#C98A6A', use: 'Collaborator cursor' }
+      ],
+      syntax: [
+        { name: 'comment', hex: '#5C5F66' },
+        { name: 'keyword', hex: '#E0898B' },
+        { name: 'string', hex: '#A9C48E' },
+        { name: 'number', hex: '#D9A85C' },
+        { name: 'function', hex: '#8FB8D9' },
+        { name: 'property', hex: '#8FB8D9' },
+        { name: 'punctuation', hex: '#7A7C82' },
+        { name: 'plain', hex: '#C9C8C4' }
+      ],
+      type: [
+        { token: 'display', family: "'IBM Plex Sans', sans-serif", size: '38px', weight: '600', tracking: '-0.035em', sample: 'Build together.', spec: '38 / 1.05 / -3.5%' },
+        { token: 'title', family: "'IBM Plex Sans', sans-serif", size: '22px', weight: '600', tracking: '-0.02em', sample: 'Version history', spec: '22 / 1.2 / -2%' },
+        { token: 'body', family: "'IBM Plex Sans', sans-serif", size: '13.5px', weight: '400', tracking: '0', sample: 'Real-time collaboration with live cursors.', spec: '13.5 / 1.6' },
+        { token: 'ui', family: "'IBM Plex Sans', sans-serif", size: '12.5px', weight: '400', tracking: '0', sample: 'Explorer · tabs · menus · dialogs', spec: '12.5 / 1.4' },
+        { token: 'label', family: "'IBM Plex Sans', sans-serif", size: '10.5px', weight: '600', tracking: '0.12em', sample: 'PEOPLE WITH ACCESS', spec: '10.5 / caps / 12%' },
+        { token: 'code', family: "'JetBrains Mono', monospace", size: '13px', weight: '400', tracking: '0', sample: 'const projects = load()', spec: '13 / 21' },
+        { token: 'meta', family: "'JetBrains Mono', monospace", size: '10.5px', weight: '400', tracking: '0', sample: 'main.js:22 · Ln 14, Col 8', spec: '10.5 / 1.5' }
+      ],
+      scale: [
+        { label: '4', w: '4px' }, { label: '8', w: '8px' }, { label: '12', w: '12px' },
+        { label: '16', w: '16px' }, { label: '24', w: '24px' }, { label: '32', w: '32px' }, { label: '44', w: '44px' }
+      ],
+      radii: [{ r: '4px' }, { r: '6px' }, { r: '9px' }, { r: '11px' }]
+    };
+  }
+}
+</script>
+</body>
+</html>
