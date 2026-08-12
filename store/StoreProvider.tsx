@@ -3,9 +3,15 @@
 import { useState } from "react";
 import { Provider } from "react-redux";
 import { makeStore } from "./index";
+import { SettingsPersistence } from "./SettingsPersistence";
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [store] = useState(makeStore);
 
-  return <Provider store={store}>{children}</Provider>;
+  return (
+    <Provider store={store}>
+      <SettingsPersistence />
+      {children}
+    </Provider>
+  );
 }

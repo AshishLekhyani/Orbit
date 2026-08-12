@@ -5,6 +5,7 @@ import projectReducer from "./slices/projectSlice";
 import previewReducer from "./slices/previewSlice";
 import collaborationReducer from "./slices/collaborationSlice";
 import settingsReducer from "./slices/settingsSlice";
+import { projectsApi } from "./api/projectsApi";
 
 export function makeStore() {
   return configureStore({
@@ -15,7 +16,9 @@ export function makeStore() {
       preview: previewReducer,
       collaboration: collaborationReducer,
       settings: settingsReducer,
+      [projectsApi.reducerPath]: projectsApi.reducer,
     },
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(projectsApi.middleware),
   });
 }
 
