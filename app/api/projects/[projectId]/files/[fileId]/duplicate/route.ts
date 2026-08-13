@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getProjectRole, roleAtLeast } from "@/lib/auth/projectAccess";
 import { joinPath, withCopySuffix } from "@/lib/fileTree";
+import { seedYjsState } from "@/lib/realtime/seedYjsState";
 
 interface RouteParams {
   params: Promise<{ projectId: string; fileId: string }>;
@@ -48,6 +49,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       type: source.type,
       isDirectory: false,
       content: source.content,
+      yjsState: seedYjsState(source.content),
     },
   });
 

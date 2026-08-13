@@ -17,7 +17,11 @@ import {
   setCreatingFile,
 } from "@/store/slices/uiSlice";
 import { openTab, setSearchOpen } from "@/store/slices/editorSlice";
+import { setCollaborators, setConnectionState, type ConnectionState } from "@/store/slices/collaborationSlice";
 import { useGetFilesQuery } from "@/store/api/filesApi";
+import { createClient } from "@/lib/supabase/client";
+import { ProjectPresenceChannel } from "@/lib/realtime/ProjectPresenceChannel";
+import type { LocalUser } from "@/lib/realtime/SupabaseYjsProvider";
 import { TopBar } from "./TopBar";
 import { Explorer } from "./explorer/Explorer";
 import { EditorWorkspace } from "./workspace/EditorWorkspace";
@@ -29,6 +33,7 @@ interface EditorShellProps {
   projectId: string;
   projectName: string;
   role: ProjectRole;
+  currentUser: LocalUser;
 }
 
 export function EditorShell(props: EditorShellProps) {
@@ -60,7 +65,7 @@ function trackDrag(startEvent: React.MouseEvent, axis: "x" | "y", onDelta: (delt
   window.addEventListener("mouseup", handleMouseUp);
 }
 
-function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
+function EditorShellInner({ projectId, projectName, role, currentUser }: EditorShellProps) {
   const dispatch = useAppDispatch();
   const explorerOpen = useAppSelector((state) => state.ui.explorerOpen);
   const explorerWidth = useAppSelector((state) => state.ui.explorerWidth);
@@ -70,6 +75,8 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
   const bottomPanelHeight = useAppSelector((state) => state.ui.bottomPanelHeight);
   const commandPaletteOpen = useAppSelector((state) => state.ui.commandPaletteOpen);
   const dirtyFileIds = useAppSelector((state) => state.editor.dirtyFileIds);
+  const activeFileId = useAppSelector((state) => state.editor.activeFileId);
+  const openTabs = useAppSelector((state) => state.editor.openTabs);
   const { data: files = [] } = useGetFilesQuery(projectId);
 
   const canEdit = role === "OWNER" || role === "EDITOR";
@@ -79,6 +86,44 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
   const [saveNowToken, setSaveNowToken] = useState(0);
   const [runToken, setRunToken] = useState(0);
   const editorInstanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const supabaseRef = useRef(createClient());
+  const presenceRef = useRef<ProjectPresenceChannel | null>(null);
+
+  useEffect(() => {
+    const presence = new ProjectPresenceChannel({
+      supabase: supabaseRef.current,
+      projectId,
+      localUser: currentUser,
+      onCollaboratorsChange: (collaborators) => dispatch(setCollaborators(collaborators)),
+    });
+    presenceRef.current = presence;
+    return () => {
+      presence.destroy();
+      presenceRef.current = null;
+    };
+  }, [projectId, currentUser, dispatch]);
+
+  useEffect(() => {
+    const activePath = openTabs.find((tab) => tab.fileId === activeFileId)?.path ?? null;
+    presenceRef.current?.setActiveFile(activeFileId, activePath);
+  }, [activeFileId, openTabs]);
+
+  const followingUserId = useAppSelector((state) => state.collaboration.followingUserId);
+  const collaborators = useAppSelector((state) => state.collaboration.collaborators);
+  const followedFileId = collaborators.find((c) => c.userId === followingUserId)?.activeFileId ?? null;
+
+  useEffect(() => {
+    if (!followedFileId || followedFileId === activeFileId) return;
+    const file = files.find((entry) => entry.id === followedFileId);
+    if (file) dispatch(openTab({ fileId: file.id, path: file.path }));
+  }, [followedFileId, activeFileId, files, dispatch]);
+
+  const handleConnectionStateChange = useCallback(
+    (state: ConnectionState) => {
+      dispatch(setConnectionState(state));
+    },
+    [dispatch],
+  );
 
   const openAtLine = useCallback(
     (fileId: string, path: string, line: number) => {
@@ -225,6 +270,8 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
             <EditorWorkspace
               projectId={projectId}
               canEdit={canEdit}
+              currentUser={currentUser}
+              onConnectionStateChange={handleConnectionStateChange}
               pendingLine={pendingLine}
               onLineHandled={() => setPendingLine(null)}
               onEditorMount={(instance) => {

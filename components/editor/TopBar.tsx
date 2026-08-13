@@ -6,6 +6,8 @@ import { OrbitLogo } from "@/components/shared/OrbitLogo";
 import { SettingsModal } from "@/components/shared/SettingsModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { togglePreview } from "@/store/slices/uiSlice";
+import { setFollowing } from "@/store/slices/collaborationSlice";
+import { ConnectionStateIndicator, CollaboratorPresence } from "./CollaboratorPresence";
 
 const SAVE_LABEL: Record<string, { text: string; color: string }> = {
   idle: { text: "Saved", color: "var(--color-ok)" },
@@ -23,10 +25,13 @@ interface TopBarProps {
 
 export function TopBar({ projectName, settingsOpen, onSettingsOpenChange, onRun }: TopBarProps) {
   const saveState = useAppSelector((state) => state.editor.saveState);
+  const followingUserId = useAppSelector((state) => state.collaboration.followingUserId);
+  const collaborators = useAppSelector((state) => state.collaboration.collaborators);
   const [moreOpen, setMoreOpen] = useState(false);
   const dispatch = useAppDispatch();
 
   const save = SAVE_LABEL[saveState] ?? SAVE_LABEL.idle;
+  const followedName = collaborators.find((c) => c.userId === followingUserId)?.name;
 
   return (
     <header className="flex h-11 flex-none items-center gap-3 border-b border-border-subtle bg-bg-panel pr-3 pl-3.5">
@@ -44,8 +49,24 @@ export function TopBar({ projectName, settingsOpen, onSettingsOpenChange, onRun 
         <span className="block h-1.25 w-1.25 rounded-full" style={{ background: save.color }} />
         {save.text}
       </span>
+      <ConnectionStateIndicator />
 
       <div className="flex-1" />
+
+      {followedName && (
+        <span className="mr-1 flex items-center gap-1.5 rounded-full border border-border-strong bg-[#17191D] py-0.75 pr-0.75 pl-2.5 text-[11.5px] text-[#C9C8C4]">
+          Following {followedName}
+          <button
+            onClick={() => dispatch(setFollowing(null))}
+            className="grid h-4.25 w-4.25 place-items-center rounded-full text-[10px] text-text-tertiary hover:bg-border-strong hover:text-text-primary"
+          >
+            ✕
+          </button>
+        </span>
+      )}
+      <div className="mr-1.5">
+        <CollaboratorPresence />
+      </div>
 
       <button
         onClick={onRun}

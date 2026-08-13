@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getProjectRole, roleAtLeast } from "@/lib/auth/projectAccess";
 import { detectFileType, joinPath } from "@/lib/fileTree";
+import { seedYjsState } from "@/lib/realtime/seedYjsState";
 
 interface RouteParams {
   params: Promise<{ projectId: string }>;
@@ -87,6 +88,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       isDirectory,
       type: isDirectory ? "OTHER" : detectFileType(name),
       content: "",
+      yjsState: isDirectory ? undefined : seedYjsState(""),
     },
   });
 

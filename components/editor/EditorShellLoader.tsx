@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { ProjectRole } from "@prisma/client";
 import { OrbitLogo } from "@/components/shared/OrbitLogo";
+import type { LocalUser } from "@/lib/realtime/SupabaseYjsProvider";
 
 const EditorShell = dynamic(
   () => import("./EditorShell").then((mod) => mod.EditorShell),
@@ -21,6 +22,7 @@ export function EditorShellLoader(props: {
   projectId: string;
   projectName: string;
   role: ProjectRole;
+  currentUser: LocalUser;
 }) {
   return <EditorShell {...props} />;
 }

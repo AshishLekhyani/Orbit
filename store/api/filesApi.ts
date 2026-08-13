@@ -39,7 +39,7 @@ export interface BundleFile {
 export const filesApi = createApi({
   reducerPath: "filesApi",
   baseQuery: fetchBaseQuery({ baseUrl: "/api/projects" }),
-  tagTypes: ["FileTree", "FileContent"],
+  tagTypes: ["FileTree"],
   endpoints: (builder) => ({
     getFiles: builder.query<FileNode[], string>({
       query: (projectId) => `/${projectId}/files`,
@@ -52,10 +52,21 @@ export const filesApi = createApi({
             ]
           : [{ type: "FileTree" as const, id: "LIST" }],
     }),
-    getFile: builder.query<FileWithContent, { projectId: string; fileId: string }>({
-      query: ({ projectId, fileId }) => `/${projectId}/files/${fileId}`,
-      transformResponse: (response: { file: FileWithContent }) => response.file,
-      providesTags: (_result, _error, arg) => [{ type: "FileContent", id: arg.fileId }],
+    getFileSnapshot: builder.query<
+      { content: string; yjsState: string | null },
+      { projectId: string; fileId: string }
+    >({
+      query: ({ projectId, fileId }) => `/${projectId}/files/${fileId}/snapshot`,
+    }),
+    saveFileSnapshot: builder.mutation<
+      void,
+      { projectId: string; fileId: string; content: string; yjsState: string }
+    >({
+      query: ({ projectId, fileId, content, yjsState }) => ({
+        url: `/${projectId}/files/${fileId}/snapshot`,
+        method: "PUT",
+        body: { content, yjsState },
+      }),
     }),
     createFile: builder.mutation<
       FileWithContent,
@@ -104,10 +115,7 @@ export const filesApi = createApi({
         body,
       }),
       transformResponse: (response: { file: FileWithContent }) => response.file,
-      invalidatesTags: (_result, _error, arg) => [
-        { type: "FileTree", id: "LIST" },
-        { type: "FileContent", id: arg.fileId },
-      ],
+      invalidatesTags: [{ type: "FileTree", id: "LIST" }],
       async onQueryStarted({ projectId, fileId, name, parentId }, { dispatch, queryFulfilled, getState }) {
         const cached = filesApi.endpoints.getFiles.select(projectId)(getState()).data ?? [];
         const current = cached.find((file) => file.id === fileId);
@@ -144,17 +152,6 @@ export const filesApi = createApi({
           }
         }
       },
-    }),
-    saveFileContent: builder.mutation<
-      FileWithContent,
-      { projectId: string; fileId: string; content: string }
-    >({
-      query: ({ projectId, fileId, content }) => ({
-        url: `/${projectId}/files/${fileId}`,
-        method: "PATCH",
-        body: { content },
-      }),
-      transformResponse: (response: { file: FileWithContent }) => response.file,
     }),
     deleteFile: builder.mutation<void, { projectId: string; fileId: string }>({
       query: ({ projectId, fileId }) => ({
@@ -240,10 +237,10 @@ export const filesApi = createApi({
 
 export const {
   useGetFilesQuery,
-  useGetFileQuery,
+  useGetFileSnapshotQuery,
+  useSaveFileSnapshotMutation,
   useCreateFileMutation,
   useRenameFileMutation,
-  useSaveFileContentMutation,
   useDeleteFileMutation,
   useDuplicateFileMutation,
   useLazySearchFilesQuery,

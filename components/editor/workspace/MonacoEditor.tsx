@@ -1,20 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
+import * as Y from "yjs";
+import { IndexeddbPersistence } from "y-indexeddb";
+import { Awareness } from "y-protocols/awareness";
+import { MonacoBinding } from "y-monaco";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setCursor, markDirty, markClean, setSaveState, setLiveContent } from "@/store/slices/editorSlice";
-import { useGetFileQuery, useSaveFileContentMutation } from "@/store/api/filesApi";
+import type { ConnectionState } from "@/store/slices/collaborationSlice";
+import { useGetFilesQuery, useGetFileSnapshotQuery, useSaveFileSnapshotMutation } from "@/store/api/filesApi";
 import { monacoLanguageFor } from "@/lib/fileMeta";
 import { ORBIT_THEME_NAME, orbitMonacoTheme } from "@/lib/monacoTheme";
+import { createClient } from "@/lib/supabase/client";
+import { SupabaseYjsProvider, type LocalUser } from "@/lib/realtime/SupabaseYjsProvider";
+import { syncAwarenessStyles, clearAwarenessStyles } from "@/lib/realtime/awarenessStyles";
+import { toBase64, fromBase64 } from "@/lib/realtime/encoding";
 
 const SAVE_DEBOUNCE_MS = 700;
+const SAFETY_INTERVAL_MS = 30000;
 
 interface MonacoEditorProps {
   projectId: string;
   fileId: string;
   canEdit: boolean;
+  currentUser: LocalUser;
+  onConnectionStateChange: (state: ConnectionState) => void;
   pendingLine: number | null;
   onLineHandled: () => void;
   onEditorMount: (editor: editor.IStandaloneCodeEditor) => void;
@@ -25,6 +37,8 @@ export function MonacoEditor({
   projectId,
   fileId,
   canEdit,
+  currentUser,
+  onConnectionStateChange,
   pendingLine,
   onLineHandled,
   onEditorMount,
@@ -32,62 +46,143 @@ export function MonacoEditor({
 }: MonacoEditorProps) {
   const dispatch = useAppDispatch();
   const settings = useAppSelector((state) => state.settings);
-  const { data: file, isLoading } = useGetFileQuery({ projectId, fileId });
-  const [saveContent] = useSaveFileContentMutation();
+  const { data: files = [] } = useGetFilesQuery(projectId);
+  const fileNode = files.find((entry) => entry.id === fileId);
+  const { data: snapshot, isLoading: snapshotLoading } = useGetFileSnapshotQuery({ projectId, fileId });
+  const [saveSnapshot] = useSaveFileSnapshotMutation();
 
+  const [ready, setReady] = useState(false);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const docRef = useRef<Y.Doc | null>(null);
+  const awarenessRef = useRef<Awareness | null>(null);
+  const bindingRef = useRef<MonacoBinding | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const latestContent = useRef<string>("");
+  const safetyInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasPendingChange = useRef(false);
+  const supabaseRef = useRef(createClient());
 
-  const flushSave = useCallback(
-    (content: string) => {
-      hasPendingChange.current = false;
-      dispatch(setSaveState("saving"));
-      saveContent({ projectId, fileId, content })
-        .unwrap()
-        .then(() => {
-          dispatch(markClean(fileId));
-          dispatch(setSaveState("saved"));
-        })
-        .catch(() => {
-          dispatch(setSaveState("error"));
-        });
-    },
-    [dispatch, saveContent, projectId, fileId],
-  );
+  const flushSnapshot = useCallback(() => {
+    const doc = docRef.current;
+    if (!doc || !canEdit) return;
+    hasPendingChange.current = false;
+    dispatch(setSaveState("saving"));
+    const content = doc.getText("content").toString();
+    const yjsState = toBase64(Y.encodeStateAsUpdate(doc));
+    saveSnapshot({ projectId, fileId, content, yjsState })
+      .unwrap()
+      .then(() => {
+        dispatch(markClean(fileId));
+        dispatch(setSaveState("saved"));
+      })
+      .catch(() => {
+        dispatch(setSaveState("error"));
+      });
+  }, [dispatch, saveSnapshot, projectId, fileId, canEdit]);
+
+  const flushIfDirty = useCallback(() => {
+    if (hasPendingChange.current) flushSnapshot();
+  }, [flushSnapshot]);
 
   useEffect(() => {
+    if (!snapshot) return;
+    let cancelled = false;
+    const doc = new Y.Doc();
+    const ytext = doc.getText("content");
+    const persistence = new IndexeddbPersistence(`orbit-file-${fileId}`, doc);
+    let provider: SupabaseYjsProvider | null = null;
+    let awareness: Awareness | null = null;
+
+    persistence.whenSynced.then(() => {
+      if (cancelled) return;
+
+      if (snapshot.yjsState) {
+        Y.applyUpdate(doc, fromBase64(snapshot.yjsState), "db-snapshot");
+      }
+
+      awareness = new Awareness(doc);
+      awarenessRef.current = awareness;
+      docRef.current = doc;
+
+      provider = new SupabaseYjsProvider({
+        supabase: supabaseRef.current,
+        fileId,
+        doc,
+        awareness,
+        localUser: currentUser,
+        onConnectionStateChange,
+        onInitialSyncSettled: (receivedPeerState) => {
+          if (!receivedPeerState && !snapshot.yjsState && ytext.length === 0 && snapshot.content) {
+            ytext.insert(0, snapshot.content);
+          }
+        },
+      });
+
+      doc.on("update", () => {
+        dispatch(setLiveContent({ path: fileNode?.path ?? fileId, content: ytext.toString() }));
+        if (!canEdit) return;
+        hasPendingChange.current = true;
+        dispatch(markDirty(fileId));
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(flushSnapshot, SAVE_DEBOUNCE_MS);
+      });
+
+      awareness.on("change", () => syncAwarenessStyles(awareness!));
+
+      setReady(true);
+    });
+
+    safetyInterval.current = setInterval(flushIfDirty, SAFETY_INTERVAL_MS);
+
     return () => {
+      cancelled = true;
+      setReady(false);
       if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (safetyInterval.current) clearInterval(safetyInterval.current);
+      flushIfDirty();
+      bindingRef.current?.destroy();
+      bindingRef.current = null;
+      provider?.destroy();
+      awareness?.destroy();
+      persistence.destroy();
+      doc.destroy();
+      clearAwarenessStyles();
+      docRef.current = null;
+      awarenessRef.current = null;
+      onConnectionStateChange("offline");
     };
-  }, []);
+  }, [snapshot, fileId]);
+
+  useEffect(() => {
+    function handleBeforeUnload() {
+      if (!hasPendingChange.current || !docRef.current || !canEdit) return;
+      const doc = docRef.current;
+      const content = doc.getText("content").toString();
+      const yjsState = toBase64(Y.encodeStateAsUpdate(doc));
+      fetch(`/api/projects/${projectId}/files/${fileId}/snapshot`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, yjsState }),
+        keepalive: true,
+      }).catch(() => {});
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [projectId, fileId, canEdit]);
 
   useEffect(() => {
     if (saveNowToken === 0) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    if (hasPendingChange.current) flushSave(latestContent.current);
-  }, [saveNowToken, flushSave]);
+    flushIfDirty();
+  }, [saveNowToken, flushIfDirty]);
 
   useEffect(() => {
-    if (pendingLine && editorRef.current) {
+    if (pendingLine && editorRef.current && ready) {
       editorRef.current.revealLineInCenter(pendingLine);
       editorRef.current.setPosition({ lineNumber: pendingLine, column: 1 });
       editorRef.current.focus();
       onLineHandled();
     }
-  }, [pendingLine, onLineHandled]);
-
-  function handleChange(value: string | undefined) {
-    const content = value ?? "";
-    latestContent.current = content;
-    hasPendingChange.current = true;
-    dispatch(markDirty(fileId));
-    if (file) dispatch(setLiveContent({ path: file.path, content }));
-
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => flushSave(latestContent.current), SAVE_DEBOUNCE_MS);
-  }
+  }, [pendingLine, onLineHandled, ready]);
 
   function handleBeforeMount(monaco: Monaco) {
     monaco.editor.defineTheme(ORBIT_THEME_NAME, orbitMonacoTheme);
@@ -98,9 +193,21 @@ export function MonacoEditor({
     monaco.editor.setTheme(ORBIT_THEME_NAME);
     onEditorMount(editorInstance);
 
+    const model = editorInstance.getModel();
+    if (model && docRef.current && awarenessRef.current) {
+      bindingRef.current = new MonacoBinding(
+        docRef.current.getText("content"),
+        model,
+        new Set([editorInstance]),
+        awarenessRef.current,
+      );
+    }
+
     editorInstance.onDidChangeCursorPosition((event) => {
       dispatch(setCursor({ line: event.position.lineNumber, column: event.position.column }));
     });
+
+    editorInstance.onDidBlurEditorWidget(() => flushIfDirty());
 
     if (pendingLine) {
       editorInstance.revealLineInCenter(pendingLine);
@@ -109,19 +216,17 @@ export function MonacoEditor({
     }
   };
 
-  if (isLoading || !file) {
+  if (snapshotLoading || !ready || !fileNode) {
     return <div className="flex-1 bg-bg-editor" />;
   }
 
   return (
     <Editor
       key={fileId}
-      language={monacoLanguageFor(file.type)}
-      defaultValue={file.content}
+      language={monacoLanguageFor(fileNode.type)}
       theme={ORBIT_THEME_NAME}
       beforeMount={handleBeforeMount}
       onMount={handleMount}
-      onChange={canEdit ? handleChange : undefined}
       options={{
         readOnly: !canEdit,
         fontFamily: "var(--font-mono)",

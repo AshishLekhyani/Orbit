@@ -5,6 +5,8 @@ import type { editor } from "monaco-editor";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setCreatingFile } from "@/store/slices/uiSlice";
 import { detectFileType, fileTypeLabel } from "@/lib/fileMeta";
+import type { ConnectionState } from "@/store/slices/collaborationSlice";
+import type { LocalUser } from "@/lib/realtime/SupabaseYjsProvider";
 import { EditorTabs } from "./EditorTabs";
 
 const MonacoEditor = dynamic(
@@ -15,6 +17,8 @@ const MonacoEditor = dynamic(
 interface EditorWorkspaceProps {
   projectId: string;
   canEdit: boolean;
+  currentUser: LocalUser;
+  onConnectionStateChange: (state: ConnectionState) => void;
   pendingLine: number | null;
   onLineHandled: () => void;
   onEditorMount: (editor: editor.IStandaloneCodeEditor) => void;
@@ -25,6 +29,8 @@ interface EditorWorkspaceProps {
 export function EditorWorkspace({
   projectId,
   canEdit,
+  currentUser,
+  onConnectionStateChange,
   pendingLine,
   onLineHandled,
   onEditorMount,
@@ -51,6 +57,8 @@ export function EditorWorkspace({
           projectId={projectId}
           fileId={activeFileId}
           canEdit={canEdit}
+          currentUser={currentUser}
+          onConnectionStateChange={onConnectionStateChange}
           pendingLine={pendingLine}
           onLineHandled={onLineHandled}
           onEditorMount={onEditorMount}

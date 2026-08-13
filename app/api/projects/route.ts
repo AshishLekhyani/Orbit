@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth/projectAccess";
 import { starterFiles, type ProjectTemplateId } from "@/lib/projectTemplates";
+import { seedYjsState } from "@/lib/realtime/seedYjsState";
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
           name: file.name,
           type: file.type,
           content: file.content,
+          yjsState: seedYjsState(file.content),
         })),
       },
     },
