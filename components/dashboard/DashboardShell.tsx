@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StoreProvider } from "@/store/StoreProvider";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setCommandPaletteOpen } from "@/store/slices/uiSlice";
 import { DashboardHeader } from "./DashboardHeader";
 import { ProjectCard } from "./ProjectCard";
 import { CreateProjectModal, type Template } from "./CreateProjectModal";
 import { TemplatesSection } from "./TemplatesSection";
+import { DashboardCommandPalette } from "./DashboardCommandPalette";
 import { useGetProjectsQuery } from "@/store/api/projectsApi";
 
 type NavFilter = "all" | "shared" | "favorites";
@@ -30,6 +33,7 @@ const SECTION_SUBTITLE: Record<NavFilter, string> = {
 
 interface DashboardShellProps {
   email: string;
+  displayName: string | null;
   onSignOut: () => void;
 }
 
@@ -47,12 +51,26 @@ function greetingForHour(hour: number): string {
   return "Good evening";
 }
 
-function DashboardContent({ email, onSignOut }: DashboardShellProps) {
+function firstNameFrom(displayName: string | null, email: string): string | null {
+  const fromDisplayName = displayName?.trim().split(/\s+/)[0];
+  if (fromDisplayName) return fromDisplayName;
+  const local = email.split("@")[0] ?? "";
+  const [first] = local.split(/[._-]/).filter(Boolean);
+  if (!first) return null;
+  return first[0].toUpperCase() + first.slice(1);
+}
+
+function DashboardContent({ email, displayName, onSignOut }: DashboardShellProps) {
+  const dispatch = useAppDispatch();
+  const commandPaletteOpen = useAppSelector((state) => state.ui.commandPaletteOpen);
   const [nav, setNav] = useState<NavFilter>("all");
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [createTemplate, setCreateTemplate] = useState<Template | undefined>();
-  const [greeting] = useState(() => greetingForHour(new Date().getHours()));
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [greetingPrefix] = useState(() => greetingForHour(new Date().getHours()));
+  const name = firstNameFrom(displayName, email);
+  const greeting = name ? `${greetingPrefix}, ${name}.` : `${greetingPrefix}.`;
 
   const { data: projects, isLoading } = useGetProjectsQuery(nav === "shared" ? "shared" : undefined);
 
@@ -65,6 +83,27 @@ function DashboardContent({ email, onSignOut }: DashboardShellProps) {
     setCreateOpen(true);
   }
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const meta = event.metaKey || event.ctrlKey;
+      if (meta && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        dispatch(setCommandPaletteOpen(!commandPaletteOpen));
+        return;
+      }
+      if (event.key === "Escape" && commandPaletteOpen) {
+        dispatch(setCommandPaletteOpen(false));
+        return;
+      }
+      if (meta && event.key === ",") {
+        event.preventDefault();
+        setSettingsOpen(true);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [dispatch, commandPaletteOpen]);
+
   return (
     <div className="flex min-h-screen flex-col">
       <DashboardHeader
@@ -72,6 +111,8 @@ function DashboardContent({ email, onSignOut }: DashboardShellProps) {
         search={search}
         onSearchChange={setSearch}
         onSignOut={onSignOut}
+        settingsOpen={settingsOpen}
+        onSettingsOpenChange={setSettingsOpen}
       />
 
       <div className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-[188px_1fr]">
@@ -153,6 +194,13 @@ function DashboardContent({ email, onSignOut }: DashboardShellProps) {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         initialTemplate={createTemplate}
+      />
+
+      <DashboardCommandPalette
+        projects={projects ?? []}
+        onNewProject={() => openCreate()}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onNavFilter={setNav}
       />
     </div>
   );

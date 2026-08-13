@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { OrbitLogo } from "@/components/shared/OrbitLogo";
-import { SettingsModal } from "./SettingsModal";
+import { SettingsModal } from "@/components/shared/SettingsModal";
 
 interface DashboardHeaderProps {
   email: string;
   search: string;
   onSearchChange: (value: string) => void;
   onSignOut: () => void;
+  settingsOpen: boolean;
+  onSettingsOpenChange: (open: boolean) => void;
 }
 
 function getInitials(email: string): string {
@@ -18,8 +20,14 @@ function getInitials(email: string): string {
   return local.slice(0, 2).toUpperCase() || "?";
 }
 
-export function DashboardHeader({ email, search, onSearchChange, onSignOut }: DashboardHeaderProps) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
+export function DashboardHeader({
+  email,
+  search,
+  onSearchChange,
+  onSignOut,
+  settingsOpen,
+  onSettingsOpenChange,
+}: DashboardHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +64,7 @@ export function DashboardHeader({ email, search, onSearchChange, onSignOut }: Da
 
       <div className="flex items-center gap-3">
         <button
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => onSettingsOpenChange(true)}
           className="text-ui text-text-tertiary hover:text-text-primary"
         >
           Settings
@@ -85,7 +93,7 @@ export function DashboardHeader({ email, search, onSearchChange, onSignOut }: Da
         </div>
       </div>
 
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsModal open={settingsOpen} onClose={() => onSettingsOpenChange(false)} />
     </header>
   );
 }

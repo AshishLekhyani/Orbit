@@ -18,7 +18,7 @@ const sizeClasses: Record<Size, string> = {
 };
 
 const base =
-  "inline-flex items-center justify-center gap-1.5 rounded-btn font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer";
+  "inline-flex items-center justify-center gap-1.5 rounded-btn font-medium transition-colors disabled:cursor-not-allowed disabled:pointer-events-none disabled:border-transparent disabled:bg-[#1D1E22] disabled:text-text-faint cursor-pointer";
 
 interface ButtonOwnProps {
   variant?: Variant;

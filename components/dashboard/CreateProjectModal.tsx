@@ -13,6 +13,12 @@ const TEMPLATES: { id: Template; name: string; note: string }[] = [
   { id: "blank", name: "Blank", note: "Empty project" },
 ];
 
+const STACKS: { name: string; note: string; available: boolean }[] = [
+  { name: "HTML / CSS / JS", note: "Recommended", available: true },
+  { name: "React", note: "Coming soon", available: false },
+  { name: "TypeScript", note: "Coming soon", available: false },
+];
+
 interface CreateProjectModalProps {
   open: boolean;
   onClose: () => void;
@@ -69,6 +75,29 @@ function CreateProjectForm({
       />
 
       <div className="mt-4 mb-2 text-[10.5px] font-semibold tracking-[0.12em] text-text-muted uppercase">
+        Stack
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {STACKS.map((stack) => (
+          <button
+            key={stack.name}
+            disabled={!stack.available}
+            title={stack.available ? undefined : "Coming soon"}
+            className={`rounded-sm border p-2.5 text-left ${
+              !stack.available
+                ? "cursor-not-allowed border-border-subtle text-text-faint"
+                : "border-accent bg-[#1A1C20]"
+            }`}
+          >
+            <div className={`text-xs ${stack.available ? "text-text-primary" : "text-text-faint"}`}>
+              {stack.name}
+            </div>
+            <div className="mt-0.5 text-[10.5px] text-text-faint">{stack.note}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 mb-2 text-[10.5px] font-semibold tracking-[0.12em] text-text-muted uppercase">
         Template
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -89,6 +118,9 @@ function CreateProjectForm({
       </div>
 
       <div className="mt-5 flex items-center gap-2 border-t border-[#22242A] pt-4">
+        <span className="text-[11.5px] text-text-muted">
+          HTML / CSS / JS · {TEMPLATES.find((option) => option.id === template)?.name}
+        </span>
         <div className="flex-1" />
         <Button variant="secondary" size="sm" onClick={onClose}>
           Cancel

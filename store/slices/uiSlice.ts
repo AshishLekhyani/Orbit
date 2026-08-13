@@ -2,6 +2,11 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export type ModalId = "share" | "settings" | "history" | "newProject" | null;
 
+export interface CreatingFileState {
+  parentId: string | null;
+  isDirectory: boolean;
+}
+
 interface UiState {
   explorerOpen: boolean;
   previewOpen: boolean;
@@ -11,6 +16,7 @@ interface UiState {
   bottomPanelHeight: number;
   commandPaletteOpen: boolean;
   activeModal: ModalId;
+  creatingFile: CreatingFileState | null;
 }
 
 const initialState: UiState = {
@@ -22,6 +28,7 @@ const initialState: UiState = {
   bottomPanelHeight: 184,
   commandPaletteOpen: false,
   activeModal: null,
+  creatingFile: null,
 };
 
 const uiSlice = createSlice({
@@ -52,6 +59,9 @@ const uiSlice = createSlice({
     setActiveModal(state, action: PayloadAction<ModalId>) {
       state.activeModal = action.payload;
     },
+    setCreatingFile(state, action: PayloadAction<CreatingFileState | null>) {
+      state.creatingFile = action.payload;
+    },
   },
 });
 
@@ -64,6 +74,7 @@ export const {
   setBottomPanelHeight,
   setCommandPaletteOpen,
   setActiveModal,
+  setCreatingFile,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

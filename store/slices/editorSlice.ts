@@ -10,20 +10,24 @@ interface CursorPosition {
   column: number;
 }
 
+export type SaveState = "idle" | "saving" | "saved" | "error";
+
 interface EditorState {
   openTabs: OpenTab[];
   activeFileId: string | null;
   cursor: CursorPosition;
-  findOpen: boolean;
   searchOpen: boolean;
+  dirtyFileIds: string[];
+  saveState: SaveState;
 }
 
 const initialState: EditorState = {
   openTabs: [],
   activeFileId: null,
   cursor: { line: 1, column: 1 },
-  findOpen: false,
   searchOpen: false,
+  dirtyFileIds: [],
+  saveState: "idle",
 };
 
 const editorSlice = createSlice({
@@ -51,16 +55,32 @@ const editorSlice = createSlice({
     setCursor(state, action: PayloadAction<CursorPosition>) {
       state.cursor = action.payload;
     },
-    setFindOpen(state, action: PayloadAction<boolean>) {
-      state.findOpen = action.payload;
-    },
     setSearchOpen(state, action: PayloadAction<boolean>) {
       state.searchOpen = action.payload;
+    },
+    markDirty(state, action: PayloadAction<string>) {
+      if (!state.dirtyFileIds.includes(action.payload)) {
+        state.dirtyFileIds.push(action.payload);
+      }
+    },
+    markClean(state, action: PayloadAction<string>) {
+      state.dirtyFileIds = state.dirtyFileIds.filter((id) => id !== action.payload);
+    },
+    setSaveState(state, action: PayloadAction<SaveState>) {
+      state.saveState = action.payload;
     },
   },
 });
 
-export const { openTab, closeTab, setActiveFile, setCursor, setFindOpen, setSearchOpen } =
-  editorSlice.actions;
+export const {
+  openTab,
+  closeTab,
+  setActiveFile,
+  setCursor,
+  setSearchOpen,
+  markDirty,
+  markClean,
+  setSaveState,
+} = editorSlice.actions;
 
 export default editorSlice.reducer;

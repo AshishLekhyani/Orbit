@@ -16,13 +16,13 @@ const CATEGORIES: Category[] = [
   "Security",
 ];
 
-const AVAILABLE: Category[] = ["General", "Editor", "Appearance"];
+const AVAILABLE: Category[] = ["General", "Editor", "Appearance", "Keyboard Shortcuts"];
 
 const DESCRIPTIONS: Record<Category, string> = {
   General: "Workspace defaults for new projects.",
   Editor: "How code looks and behaves while you type.",
   Appearance: "Theme and interface density.",
-  "Keyboard Shortcuts": "Every shortcut Orbit listens for - available once the editor ships.",
+  "Keyboard Shortcuts": "Every shortcut Orbit listens for.",
   Collaboration: "Presence, cursors, and session limits - coming with real-time collaboration.",
   Security: "Access, sessions, and sharing defaults - coming with project sharing.",
 };
@@ -154,6 +154,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           {category === "General" && <GeneralSettings />}
           {category === "Editor" && <EditorSettings />}
           {category === "Appearance" && <AppearanceSettings />}
+          {category === "Keyboard Shortcuts" && <KeyboardShortcutsSettings />}
         </div>
       </div>
     </Modal>
@@ -215,6 +216,21 @@ function EditorSettings() {
           onChange={(autoSave) => dispatch(setSettings({ autoSave }))}
         />
       </SettingRow>
+    </>
+  );
+}
+
+function KeyboardShortcutsSettings() {
+  return (
+    <>
+      <KeyRow label="New File" description="Create a file in the active folder" value="⌘N" />
+      <KeyRow label="Command Palette" description="Every command in the product" value="⌘K" />
+      <KeyRow label="Find in File" description="Search within the open file" value="⌘F" />
+      <KeyRow label="Search in Files" description="Search across every file in the project" value="⇧⌘F" />
+      <KeyRow label="Go to Line" description="Jump to a specific line number" value="⌃G" />
+      <KeyRow label="Save" description="Force an immediate save" value="⌘S" />
+      <KeyRow label="Toggle Sidebar" description="Collapse the explorer" value="⌘B" />
+      <KeyRow label="Open Settings" description="Open this panel" value="⌘," />
     </>
   );
 }
