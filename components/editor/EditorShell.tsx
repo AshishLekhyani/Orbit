@@ -19,7 +19,7 @@ import {
 } from "@/store/slices/uiSlice";
 import { openTab, setSearchOpen } from "@/store/slices/editorSlice";
 import { setCollaborators, setConnectionState, type ConnectionState } from "@/store/slices/collaborationSlice";
-import { useGetFilesQuery } from "@/store/api/filesApi";
+import { useGetFilesQuery, filesApi } from "@/store/api/filesApi";
 import { createClient } from "@/lib/supabase/client";
 import { ProjectPresenceChannel } from "@/lib/realtime/ProjectPresenceChannel";
 import type { LocalUser } from "@/lib/realtime/SupabaseYjsProvider";
@@ -30,6 +30,7 @@ import { PreviewPanel } from "./preview/PreviewPanel";
 import { BottomPanel } from "./preview/BottomPanel";
 import { CommandPalette } from "./CommandPalette";
 import { ShareModal } from "./ShareModal";
+import { HistoryPanel } from "./HistoryPanel";
 
 interface EditorShellProps {
   projectId: string;
@@ -73,6 +74,7 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
   const { toast } = useToast();
   const [role, setRole] = useState<ProjectRole>(initialRole);
   const [shareOpen, setShareOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const explorerOpen = useAppSelector((state) => state.ui.explorerOpen);
   const explorerWidth = useAppSelector((state) => state.ui.explorerWidth);
   const previewOpen = useAppSelector((state) => state.ui.previewOpen);
@@ -118,6 +120,10 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
     [projectId, currentUser.id, router, toast],
   );
 
+  const handleFilesChanged = useCallback(() => {
+    dispatch(filesApi.util.invalidateTags([{ type: "FileTree", id: "LIST" }]));
+  }, [dispatch]);
+
   useEffect(() => {
     const presence = new ProjectPresenceChannel({
       supabase: supabaseRef.current,
@@ -125,13 +131,14 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
       localUser: currentUser,
       onCollaboratorsChange: (collaborators) => dispatch(setCollaborators(collaborators)),
       onMembershipChanged: handleMembershipChanged,
+      onFilesChanged: handleFilesChanged,
     });
     presenceRef.current = presence;
     return () => {
       presence.destroy();
       presenceRef.current = null;
     };
-  }, [projectId, currentUser, dispatch, handleMembershipChanged]);
+  }, [projectId, currentUser, dispatch, handleMembershipChanged, handleFilesChanged]);
 
   useEffect(() => {
     const activePath = openTabs.find((tab) => tab.fileId === activeFileId)?.path ?? null;
@@ -224,6 +231,11 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
         setShareOpen(true);
         return;
       }
+      if (meta && event.shiftKey && event.key.toLowerCase() === "h") {
+        event.preventDefault();
+        setHistoryOpen((value) => !value);
+        return;
+      }
       if (meta && event.key.toLowerCase() === "f") {
         event.preventDefault();
         triggerFindInFile();
@@ -279,9 +291,10 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
         onRun={triggerRun}
         canShare={role === "OWNER"}
         onOpenShare={() => setShareOpen(true)}
+        onOpenHistory={() => setHistoryOpen((value) => !value)}
       />
 
-      <div className="flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1">
         {explorerOpen && (
           <>
             <aside
@@ -342,6 +355,14 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
           />
           <BottomPanel open={bottomPanelOpen} height={bottomPanelHeight} onOpenAtLine={openPathAtLine} />
         </div>
+
+        <HistoryPanel
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          projectId={projectId}
+          canMutate={canEdit}
+          onRestored={handleFilesChanged}
+        />
       </div>
 
       <CommandPalette
@@ -352,6 +373,7 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
         onFindInFile={triggerFindInFile}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenShare={() => setShareOpen(true)}
+        onOpenHistory={() => setHistoryOpen(true)}
         onRun={triggerRun}
       />
 

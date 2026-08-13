@@ -8,6 +8,7 @@ import settingsReducer from "./slices/settingsSlice";
 import { projectsApi } from "./api/projectsApi";
 import { filesApi } from "./api/filesApi";
 import { sharingApi } from "./api/sharingApi";
+import { versionsApi } from "./api/versionsApi";
 
 export function makeStore() {
   return configureStore({
@@ -21,9 +22,15 @@ export function makeStore() {
       [projectsApi.reducerPath]: projectsApi.reducer,
       [filesApi.reducerPath]: filesApi.reducer,
       [sharingApi.reducerPath]: sharingApi.reducer,
+      [versionsApi.reducerPath]: versionsApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(projectsApi.middleware, filesApi.middleware, sharingApi.middleware),
+      getDefaultMiddleware().concat(
+        projectsApi.middleware,
+        filesApi.middleware,
+        sharingApi.middleware,
+        versionsApi.middleware,
+      ),
   });
 }
 

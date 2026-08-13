@@ -8,6 +8,7 @@ interface ProjectPresenceOptions {
   localUser: LocalUser;
   onCollaboratorsChange: (collaborators: Collaborator[]) => void;
   onMembershipChanged?: (userId: string) => void;
+  onFilesChanged?: () => void;
 }
 
 interface PresenceState {
@@ -53,6 +54,12 @@ export class ProjectPresenceChannel {
     if (options.onMembershipChanged) {
       channel.on("broadcast", { event: "membership-changed" }, ({ payload }) => {
         if (typeof payload?.userId === "string") options.onMembershipChanged?.(payload.userId);
+      });
+    }
+
+    if (options.onFilesChanged) {
+      channel.on("broadcast", { event: "files-changed" }, () => {
+        options.onFilesChanged?.();
       });
     }
 

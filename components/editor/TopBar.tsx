@@ -23,6 +23,7 @@ interface TopBarProps {
   onRun: () => void;
   canShare: boolean;
   onOpenShare: () => void;
+  onOpenHistory: () => void;
 }
 
 export function TopBar({
@@ -32,6 +33,7 @@ export function TopBar({
   onRun,
   canShare,
   onOpenShare,
+  onOpenHistory,
 }: TopBarProps) {
   const saveState = useAppSelector((state) => state.editor.saveState);
   const followingUserId = useAppSelector((state) => state.collaboration.followingUserId);
@@ -76,6 +78,14 @@ export function TopBar({
       <div className="mr-1.5">
         <CollaboratorPresence />
       </div>
+
+      <button
+        onClick={onOpenHistory}
+        title="Version history"
+        className="rounded-sm px-2.25 py-1.25 text-ui text-text-tertiary hover:bg-[#17191D] hover:text-text-primary"
+      >
+        History
+      </button>
 
       {canShare && (
         <button

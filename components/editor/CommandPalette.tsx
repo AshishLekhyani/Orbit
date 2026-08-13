@@ -16,6 +16,7 @@ interface CommandPaletteProps {
   onFindInFile: () => void;
   onOpenSettings: () => void;
   onOpenShare: () => void;
+  onOpenHistory: () => void;
   onRun: () => void;
 }
 
@@ -34,6 +35,7 @@ function CommandPaletteContent({
   onFindInFile,
   onOpenSettings,
   onOpenShare,
+  onOpenHistory,
   onRun,
   onClose,
 }: CommandPaletteProps & { onClose: () => void }) {
@@ -99,6 +101,14 @@ function CommandPaletteContent({
         icon: "⚙",
         run: onOpenSettings,
       },
+      {
+        id: "version-history",
+        label: "Version History",
+        hint: "Project",
+        key: "⌘⇧H",
+        icon: "↺",
+        run: onOpenHistory,
+      },
       ...(canShare
         ? [
             {
@@ -139,7 +149,18 @@ function CommandPaletteContent({
       );
     }
     return list;
-  }, [dispatch, router, onGoToLine, onFindInFile, onOpenSettings, onOpenShare, onRun, canEdit, canShare]);
+  }, [
+    dispatch,
+    router,
+    onGoToLine,
+    onFindInFile,
+    onOpenSettings,
+    onOpenShare,
+    onOpenHistory,
+    onRun,
+    canEdit,
+    canShare,
+  ]);
 
   const fileItems: PaletteCommand[] = useMemo(
     () =>

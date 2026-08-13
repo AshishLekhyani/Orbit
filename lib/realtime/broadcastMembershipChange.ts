@@ -1,11 +1,5 @@
-import { createServiceRoleClient } from "@/lib/supabase/serviceRole";
+import { broadcastToProjectChannel } from "@/lib/realtime/broadcast";
 
-export async function broadcastMembershipChange(projectId: string, userId: string) {
-  const supabase = createServiceRoleClient();
-  const channel = supabase.channel(`project-${projectId}`, { config: { private: true } });
-  try {
-    await channel.httpSend("membership-changed", { userId });
-  } finally {
-    await supabase.removeChannel(channel);
-  }
+export function broadcastMembershipChange(projectId: string, userId: string) {
+  return broadcastToProjectChannel(projectId, "membership-changed", { userId });
 }
