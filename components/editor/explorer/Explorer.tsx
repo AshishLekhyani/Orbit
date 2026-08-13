@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleFolderExpanded } from "@/store/slices/projectSlice";
-import { openTab, setSearchOpen } from "@/store/slices/editorSlice";
+import { openTab, closeTab, setActiveFile, setSearchOpen } from "@/store/slices/editorSlice";
 import { setCreatingFile, setCommandPaletteOpen } from "@/store/slices/uiSlice";
 import {
   useGetFilesQuery,
@@ -34,6 +34,7 @@ interface ContextMenuState {
 export function Explorer({ projectId, canEdit, dirtyFileIds, onOpenAtLine }: ExplorerProps) {
   const dispatch = useAppDispatch();
   const activeFileId = useAppSelector((state) => state.editor.activeFileId);
+  const openTabs = useAppSelector((state) => state.editor.openTabs);
   const searchOpen = useAppSelector((state) => state.editor.searchOpen);
   const creating = useAppSelector((state) => state.ui.creatingFile);
   const expandedFolderIds = useAppSelector((state) => state.project.expandedFolderIds);
@@ -97,10 +98,20 @@ export function Explorer({ projectId, canEdit, dirtyFileIds, onOpenAtLine }: Exp
 
   async function handleDelete(node: TreeNode) {
     if (!window.confirm(`Delete "${node.name}"? This can't be undone.`)) return;
+
+    const affectedPrefix = `${node.path}/`;
+    const affectedTabs = openTabs.filter(
+      (tab) => tab.fileId === node.id || tab.path.startsWith(affectedPrefix),
+    );
+    const previousActiveFileId = activeFileId;
+    affectedTabs.forEach((tab) => dispatch(closeTab(tab.fileId)));
+
     try {
       await deleteFile({ projectId, fileId: node.id }).unwrap();
       toast("Deleted", node.name);
     } catch {
+      affectedTabs.forEach((tab) => dispatch(openTab(tab)));
+      if (previousActiveFileId) dispatch(setActiveFile(previousActiveFileId));
       toast("Couldn't delete", undefined, "danger");
     }
   }

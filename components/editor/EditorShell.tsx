@@ -6,11 +6,23 @@ import type { ProjectRole } from "@prisma/client";
 import { StoreProvider } from "@/store/StoreProvider";
 import { ToastProvider } from "@/components/shared/ToastProvider";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setExplorerWidth, toggleExplorer, setCommandPaletteOpen, setCreatingFile } from "@/store/slices/uiSlice";
+import {
+  setExplorerWidth,
+  setPreviewWidth,
+  setBottomPanelHeight,
+  toggleExplorer,
+  togglePreview,
+  toggleBottomPanel,
+  setCommandPaletteOpen,
+  setCreatingFile,
+} from "@/store/slices/uiSlice";
 import { openTab, setSearchOpen } from "@/store/slices/editorSlice";
+import { useGetFilesQuery } from "@/store/api/filesApi";
 import { TopBar } from "./TopBar";
 import { Explorer } from "./explorer/Explorer";
 import { EditorWorkspace } from "./workspace/EditorWorkspace";
+import { PreviewPanel } from "./preview/PreviewPanel";
+import { BottomPanel } from "./preview/BottomPanel";
 import { CommandPalette } from "./CommandPalette";
 
 interface EditorShellProps {
@@ -29,20 +41,44 @@ export function EditorShell(props: EditorShellProps) {
   );
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function trackDrag(startEvent: React.MouseEvent, axis: "x" | "y", onDelta: (delta: number) => void) {
+  const startPos = axis === "x" ? startEvent.clientX : startEvent.clientY;
+
+  function handleMouseMove(event: MouseEvent) {
+    const pos = axis === "x" ? event.clientX : event.clientY;
+    onDelta(pos - startPos);
+  }
+  function handleMouseUp() {
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("mouseup", handleMouseUp);
+  }
+  window.addEventListener("mousemove", handleMouseMove);
+  window.addEventListener("mouseup", handleMouseUp);
+}
+
 function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
   const dispatch = useAppDispatch();
   const explorerOpen = useAppSelector((state) => state.ui.explorerOpen);
   const explorerWidth = useAppSelector((state) => state.ui.explorerWidth);
+  const previewOpen = useAppSelector((state) => state.ui.previewOpen);
+  const previewWidth = useAppSelector((state) => state.ui.previewWidth);
+  const bottomPanelOpen = useAppSelector((state) => state.ui.bottomPanelOpen);
+  const bottomPanelHeight = useAppSelector((state) => state.ui.bottomPanelHeight);
   const commandPaletteOpen = useAppSelector((state) => state.ui.commandPaletteOpen);
   const dirtyFileIds = useAppSelector((state) => state.editor.dirtyFileIds);
+  const { data: files = [] } = useGetFilesQuery(projectId);
 
   const canEdit = role === "OWNER" || role === "EDITOR";
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [pendingLine, setPendingLine] = useState<number | null>(null);
   const [saveNowToken, setSaveNowToken] = useState(0);
+  const [runToken, setRunToken] = useState(0);
   const editorInstanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const resizeState = useRef<{ startX: number; startWidth: number } | null>(null);
 
   const openAtLine = useCallback(
     (fileId: string, path: string, line: number) => {
@@ -53,6 +89,14 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
     [dispatch],
   );
 
+  const openPathAtLine = useCallback(
+    (path: string, line: number) => {
+      const file = files.find((entry) => entry.path === path);
+      if (file) openAtLine(file.id, file.path, line);
+    },
+    [files, openAtLine],
+  );
+
   const triggerFindInFile = useCallback(() => {
     editorInstanceRef.current?.focus();
     editorInstanceRef.current?.getAction("actions.find")?.run();
@@ -61,6 +105,10 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
   const triggerGoToLine = useCallback(() => {
     editorInstanceRef.current?.focus();
     editorInstanceRef.current?.getAction("editor.action.gotoLine")?.run();
+  }, []);
+
+  const triggerRun = useCallback(() => {
+    setRunToken((token) => token + 1);
   }, []);
 
   useEffect(() => {
@@ -86,6 +134,11 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
         dispatch(toggleExplorer());
         return;
       }
+      if (meta && event.shiftKey && event.key.toLowerCase() === "p") {
+        event.preventDefault();
+        dispatch(togglePreview());
+        return;
+      }
       if (meta && event.shiftKey && event.key.toLowerCase() === "f") {
         event.preventDefault();
         dispatch(setSearchOpen(true));
@@ -106,6 +159,11 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
         setSettingsOpen(true);
         return;
       }
+      if (meta && event.key === "Enter") {
+        event.preventDefault();
+        triggerRun();
+        return;
+      }
       if (meta && event.key.toLowerCase() === "s") {
         event.preventDefault();
         setSaveNowToken((token) => token + 1);
@@ -114,24 +172,22 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [dispatch, commandPaletteOpen, canEdit, triggerFindInFile, triggerGoToLine]);
+  }, [dispatch, commandPaletteOpen, canEdit, triggerFindInFile, triggerGoToLine, triggerRun]);
 
-  function handleResizeStart(event: React.MouseEvent) {
-    resizeState.current = { startX: event.clientX, startWidth: explorerWidth };
+  function handleExplorerResizeStart(event: React.MouseEvent) {
+    const startWidth = explorerWidth;
+    trackDrag(event, "x", (delta) => dispatch(setExplorerWidth(clamp(startWidth + delta, 180, 440))));
+  }
 
-    function handleMouseMove(moveEvent: MouseEvent) {
-      if (!resizeState.current) return;
-      const delta = moveEvent.clientX - resizeState.current.startX;
-      const next = Math.max(180, Math.min(440, resizeState.current.startWidth + delta));
-      dispatch(setExplorerWidth(next));
-    }
-    function handleMouseUp() {
-      resizeState.current = null;
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    }
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+  function handlePreviewResizeStart(event: React.MouseEvent) {
+    const startWidth = previewWidth;
+    trackDrag(event, "x", (delta) => dispatch(setPreviewWidth(clamp(startWidth - delta, 280, 900))));
+  }
+
+  function handleBottomResizeStart(event: React.MouseEvent) {
+    if (!bottomPanelOpen) dispatch(toggleBottomPanel());
+    const startHeight = bottomPanelHeight;
+    trackDrag(event, "y", (delta) => dispatch(setBottomPanelHeight(clamp(startHeight - delta, 120, 460))));
   }
 
   return (
@@ -140,6 +196,7 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
         projectName={projectName}
         settingsOpen={settingsOpen}
         onSettingsOpenChange={setSettingsOpen}
+        onRun={triggerRun}
       />
 
       <div className="flex min-h-0 flex-1">
@@ -157,23 +214,50 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
               />
             </aside>
             <div
-              onMouseDown={handleResizeStart}
+              onMouseDown={handleExplorerResizeStart}
               className="w-1 flex-none cursor-col-resize hover:bg-accent/35"
             />
           </>
         )}
 
-        <EditorWorkspace
-          projectId={projectId}
-          canEdit={canEdit}
-          pendingLine={pendingLine}
-          onLineHandled={() => setPendingLine(null)}
-          onEditorMount={(instance) => {
-            editorInstanceRef.current = instance;
-          }}
-          onFindInFile={triggerFindInFile}
-          saveNowToken={saveNowToken}
-        />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1">
+            <EditorWorkspace
+              projectId={projectId}
+              canEdit={canEdit}
+              pendingLine={pendingLine}
+              onLineHandled={() => setPendingLine(null)}
+              onEditorMount={(instance) => {
+                editorInstanceRef.current = instance;
+              }}
+              onFindInFile={triggerFindInFile}
+              saveNowToken={saveNowToken}
+            />
+
+            {previewOpen && (
+              <>
+                <div
+                  onMouseDown={handlePreviewResizeStart}
+                  className="w-1 flex-none cursor-col-resize hover:bg-accent/35"
+                />
+                <div style={{ width: previewWidth }} className="flex-none">
+                  <PreviewPanel
+                    projectId={projectId}
+                    projectName={projectName}
+                    runToken={runToken}
+                    onOpenAtLine={openPathAtLine}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div
+            onMouseDown={handleBottomResizeStart}
+            className="h-1 flex-none cursor-row-resize hover:bg-accent/35"
+          />
+          <BottomPanel open={bottomPanelOpen} height={bottomPanelHeight} onOpenAtLine={openPathAtLine} />
+        </div>
       </div>
 
       <CommandPalette
@@ -182,6 +266,7 @@ function EditorShellInner({ projectId, projectName, role }: EditorShellProps) {
         onGoToLine={triggerGoToLine}
         onFindInFile={triggerFindInFile}
         onOpenSettings={() => setSettingsOpen(true)}
+        onRun={triggerRun}
       />
     </div>
   );

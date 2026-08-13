@@ -40,6 +40,11 @@ export function joinPath(parentPath: string | null, name: string): string {
   return parentPath ? `${parentPath}/${name}` : name;
 }
 
+export function withCopySuffix(name: string): string {
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? `${name.slice(0, dot)}-copy${name.slice(dot)}` : `${name}-copy`;
+}
+
 export function fileTypeLabel(type: string): string {
   switch (type) {
     case "HTML":

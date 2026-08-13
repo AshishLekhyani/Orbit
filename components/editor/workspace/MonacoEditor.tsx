@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setCursor, markDirty, markClean, setSaveState } from "@/store/slices/editorSlice";
+import { setCursor, markDirty, markClean, setSaveState, setLiveContent } from "@/store/slices/editorSlice";
 import { useGetFileQuery, useSaveFileContentMutation } from "@/store/api/filesApi";
 import { monacoLanguageFor } from "@/lib/fileMeta";
 import { ORBIT_THEME_NAME, orbitMonacoTheme } from "@/lib/monacoTheme";
@@ -83,6 +83,7 @@ export function MonacoEditor({
     latestContent.current = content;
     hasPendingChange.current = true;
     dispatch(markDirty(fileId));
+    if (file) dispatch(setLiveContent({ path: file.path, content }));
 
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => flushSave(latestContent.current), SAVE_DEBOUNCE_MS);

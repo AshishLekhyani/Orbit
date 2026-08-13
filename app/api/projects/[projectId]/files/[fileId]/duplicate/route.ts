@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getProjectRole, roleAtLeast } from "@/lib/auth/projectAccess";
-import { joinPath } from "@/lib/fileTree";
+import { joinPath, withCopySuffix } from "@/lib/fileTree";
 
 interface RouteParams {
   params: Promise<{ projectId: string; fileId: string }>;
@@ -10,11 +10,6 @@ interface RouteParams {
 function parentPathOf(path: string): string | null {
   const idx = path.lastIndexOf("/");
   return idx === -1 ? null : path.slice(0, idx);
-}
-
-function withCopySuffix(name: string): string {
-  const dot = name.lastIndexOf(".");
-  return dot > 0 ? `${name.slice(0, dot)}-copy${name.slice(dot)}` : `${name}-copy`;
 }
 
 export async function POST(_request: NextRequest, { params }: RouteParams) {

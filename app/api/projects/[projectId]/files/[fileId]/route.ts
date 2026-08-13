@@ -44,7 +44,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  if (typeof body.name === "string" || body.parentId !== undefined) {
+  const isStructuralChange = typeof body.name === "string" || body.parentId !== undefined;
+  let file = null;
+
+  if (isStructuralChange) {
     const result = await moveOrRenameFile(projectId, fileId, {
       name: typeof body.name === "string" ? body.name : undefined,
       parentId: body.parentId,
@@ -52,15 +55,21 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
+    file = result.file;
   }
 
   if (typeof body.content === "string") {
-    await prisma.file.update({ where: { id: fileId }, data: { content: body.content } });
+    file = await prisma.file.update({ where: { id: fileId }, data: { content: body.content } });
   }
 
-  await prisma.project.update({ where: { id: projectId }, data: { updatedAt: new Date() } });
+  if (isStructuralChange) {
+    await prisma.project.update({ where: { id: projectId }, data: { updatedAt: new Date() } });
+  }
 
-  const file = await prisma.file.findUnique({ where: { id: fileId } });
+  if (!file) {
+    file = await prisma.file.findUnique({ where: { id: fileId } });
+  }
+
   return NextResponse.json({ file });
 }
 

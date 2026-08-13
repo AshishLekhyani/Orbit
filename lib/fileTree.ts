@@ -1,11 +1,13 @@
+import type { File } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { detectFileType, joinPath } from "@/lib/fileMeta";
+import { detectFileType, joinPath, withCopySuffix } from "@/lib/fileMeta";
 
-export { detectFileType, joinPath };
+export { detectFileType, joinPath, withCopySuffix };
 
 interface MoveOrRenameResult {
   ok: true;
   path: string;
+  file: File;
 }
 interface MoveOrRenameError {
   ok: false;
@@ -65,8 +67,8 @@ export async function moveOrRenameFile(
 
   const oldPath = file.path;
 
-  await prisma.$transaction(async (tx) => {
-    await tx.file.update({
+  const updatedFile = await prisma.$transaction(async (tx) => {
+    const result = await tx.file.update({
       where: { id: fileId },
       data: { name: nextName, parentId: resolvedParentId, path: nextPath },
     });
@@ -83,7 +85,9 @@ export async function moveOrRenameFile(
         });
       }
     }
+
+    return result;
   });
 
-  return { ok: true, path: nextPath };
+  return { ok: true, path: nextPath, file: updatedFile };
 }

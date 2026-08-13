@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setCommandPaletteOpen, toggleExplorer, setCreatingFile } from "@/store/slices/uiSlice";
+import { setCommandPaletteOpen, toggleExplorer, togglePreview, setCreatingFile } from "@/store/slices/uiSlice";
 import { openTab, setSearchOpen } from "@/store/slices/editorSlice";
 import { useGetFilesQuery } from "@/store/api/filesApi";
 import { CommandPaletteShell, type PaletteCommand } from "@/components/shared/CommandPaletteShell";
@@ -14,6 +14,7 @@ interface CommandPaletteProps {
   onGoToLine: () => void;
   onFindInFile: () => void;
   onOpenSettings: () => void;
+  onRun: () => void;
 }
 
 export function CommandPalette(props: CommandPaletteProps) {
@@ -29,6 +30,7 @@ function CommandPaletteContent({
   onGoToLine,
   onFindInFile,
   onOpenSettings,
+  onRun,
   onClose,
 }: CommandPaletteProps & { onClose: () => void }) {
   const dispatch = useAppDispatch();
@@ -37,6 +39,22 @@ function CommandPaletteContent({
 
   const commands: PaletteCommand[] = useMemo(() => {
     const list: PaletteCommand[] = [
+      {
+        id: "run-project",
+        label: "Run Project",
+        hint: "Preview",
+        key: "⌘↵",
+        icon: "▶",
+        run: onRun,
+      },
+      {
+        id: "toggle-preview",
+        label: "Toggle Preview",
+        hint: "Layout",
+        key: "⌘⇧P",
+        icon: "▤",
+        run: () => dispatch(togglePreview()),
+      },
       {
         id: "toggle-sidebar",
         label: "Toggle Sidebar",
@@ -105,7 +123,7 @@ function CommandPaletteContent({
       );
     }
     return list;
-  }, [dispatch, router, onGoToLine, onFindInFile, onOpenSettings, canEdit]);
+  }, [dispatch, router, onGoToLine, onFindInFile, onOpenSettings, onRun, canEdit]);
 
   const fileItems: PaletteCommand[] = useMemo(
     () =>

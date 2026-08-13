@@ -19,11 +19,17 @@ export interface ProblemEntry {
   text: string;
 }
 
+export interface PreviewError {
+  text: string;
+  file: string;
+  line: number;
+}
+
 interface PreviewState {
   device: PreviewDevice;
   zoom: number;
   isLoading: boolean;
-  errorText: string | null;
+  error: PreviewError | null;
   activeBottomTab: BottomTab;
   console: ConsoleEntry[];
   problems: ProblemEntry[];
@@ -36,7 +42,7 @@ const initialState: PreviewState = {
   device: "desktop",
   zoom: 100,
   isLoading: true,
-  errorText: null,
+  error: null,
   activeBottomTab: "console",
   console: [],
   problems: [],
@@ -56,8 +62,8 @@ const previewSlice = createSlice({
     setLoading(state, action: PayloadAction<boolean>) {
       state.isLoading = action.payload;
     },
-    setError(state, action: PayloadAction<string | null>) {
-      state.errorText = action.payload;
+    setError(state, action: PayloadAction<PreviewError | null>) {
+      state.error = action.payload;
     },
     setActiveBottomTab(state, action: PayloadAction<BottomTab>) {
       state.activeBottomTab = action.payload;
@@ -73,7 +79,18 @@ const previewSlice = createSlice({
     },
     clearConsole(state) {
       state.console = [];
-      state.output = [];
+    },
+    startRun(state) {
+      state.isLoading = true;
+      state.error = null;
+      state.console = [];
+      state.problems = state.problems.filter((problem) => problem.severity !== "error");
+    },
+    appendOutput(state, action: PayloadAction<string>) {
+      state.output.push(action.payload);
+      if (state.output.length > MAX_CONSOLE_ENTRIES) {
+        state.output.splice(0, state.output.length - MAX_CONSOLE_ENTRIES);
+      }
     },
   },
 });
@@ -87,6 +104,8 @@ export const {
   appendConsoleEntry,
   setProblems,
   clearConsole,
+  startRun,
+  appendOutput,
 } = previewSlice.actions;
 
 export default previewSlice.reducer;

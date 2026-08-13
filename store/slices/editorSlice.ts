@@ -19,6 +19,7 @@ interface EditorState {
   searchOpen: boolean;
   dirtyFileIds: string[];
   saveState: SaveState;
+  liveContent: Record<string, string>;
 }
 
 const initialState: EditorState = {
@@ -28,6 +29,7 @@ const initialState: EditorState = {
   searchOpen: false,
   dirtyFileIds: [],
   saveState: "idle",
+  liveContent: {},
 };
 
 const editorSlice = createSlice({
@@ -69,6 +71,13 @@ const editorSlice = createSlice({
     setSaveState(state, action: PayloadAction<SaveState>) {
       state.saveState = action.payload;
     },
+    setLiveContent(state, action: PayloadAction<{ path: string; content: string }>) {
+      state.liveContent[action.payload.path] = action.payload.content;
+    },
+    updateTabPath(state, action: PayloadAction<{ fileId: string; path: string }>) {
+      const tab = state.openTabs.find((entry) => entry.fileId === action.payload.fileId);
+      if (tab) tab.path = action.payload.path;
+    },
   },
 });
 
@@ -81,6 +90,8 @@ export const {
   markDirty,
   markClean,
   setSaveState,
+  setLiveContent,
+  updateTabPath,
 } = editorSlice.actions;
 
 export default editorSlice.reducer;

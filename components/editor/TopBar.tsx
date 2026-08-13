@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { OrbitLogo } from "@/components/shared/OrbitLogo";
 import { SettingsModal } from "@/components/shared/SettingsModal";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { togglePreview } from "@/store/slices/uiSlice";
 
 const SAVE_LABEL: Record<string, { text: string; color: string }> = {
   idle: { text: "Saved", color: "var(--color-ok)" },
@@ -17,11 +18,13 @@ interface TopBarProps {
   projectName: string;
   settingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
+  onRun: () => void;
 }
 
-export function TopBar({ projectName, settingsOpen, onSettingsOpenChange }: TopBarProps) {
+export function TopBar({ projectName, settingsOpen, onSettingsOpenChange, onRun }: TopBarProps) {
   const saveState = useAppSelector((state) => state.editor.saveState);
   const [moreOpen, setMoreOpen] = useState(false);
+  const dispatch = useAppDispatch();
 
   const save = SAVE_LABEL[saveState] ?? SAVE_LABEL.idle;
 
@@ -44,6 +47,14 @@ export function TopBar({ projectName, settingsOpen, onSettingsOpenChange }: TopB
 
       <div className="flex-1" />
 
+      <button
+        onClick={onRun}
+        className="flex items-center gap-1.5 rounded-sm bg-accent px-2.75 py-1.5 text-ui font-medium text-on-accent hover:bg-accent-hover"
+      >
+        Run
+        <span className="font-mono text-[10px] opacity-70">⌘↵</span>
+      </button>
+
       <div className="relative">
         <button
           onClick={() => setMoreOpen((value) => !value)}
@@ -65,6 +76,16 @@ export function TopBar({ projectName, settingsOpen, onSettingsOpenChange }: TopB
             >
               Settings
               <span className="font-mono text-[10px] text-text-faint">⌘,</span>
+            </button>
+            <button
+              onClick={() => {
+                dispatch(togglePreview());
+                setMoreOpen(false);
+              }}
+              className="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-ui text-[#C9C8C4] hover:bg-[#22242A]"
+            >
+              Toggle preview
+              <span className="font-mono text-[10px] text-text-faint">⌘⇧P</span>
             </button>
           </div>
         )}
