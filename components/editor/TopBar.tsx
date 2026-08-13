@@ -21,9 +21,18 @@ interface TopBarProps {
   settingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
   onRun: () => void;
+  canShare: boolean;
+  onOpenShare: () => void;
 }
 
-export function TopBar({ projectName, settingsOpen, onSettingsOpenChange, onRun }: TopBarProps) {
+export function TopBar({
+  projectName,
+  settingsOpen,
+  onSettingsOpenChange,
+  onRun,
+  canShare,
+  onOpenShare,
+}: TopBarProps) {
   const saveState = useAppSelector((state) => state.editor.saveState);
   const followingUserId = useAppSelector((state) => state.collaboration.followingUserId);
   const collaborators = useAppSelector((state) => state.collaboration.collaborators);
@@ -67,6 +76,15 @@ export function TopBar({ projectName, settingsOpen, onSettingsOpenChange, onRun 
       <div className="mr-1.5">
         <CollaboratorPresence />
       </div>
+
+      {canShare && (
+        <button
+          onClick={onOpenShare}
+          className="rounded-sm border border-border-strong bg-[#17191D] px-2.75 py-1.25 text-ui text-text-primary hover:border-[#3A3D44] hover:bg-[#1E2025]"
+        >
+          Share
+        </button>
+      )}
 
       <button
         onClick={onRun}

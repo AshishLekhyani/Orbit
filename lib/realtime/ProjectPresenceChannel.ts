@@ -7,6 +7,7 @@ interface ProjectPresenceOptions {
   projectId: string;
   localUser: LocalUser;
   onCollaboratorsChange: (collaborators: Collaborator[]) => void;
+  onMembershipChanged?: (userId: string) => void;
 }
 
 interface PresenceState {
@@ -48,6 +49,12 @@ export class ProjectPresenceChannel {
     channel.on("presence", { event: "sync" }, syncCollaborators);
     channel.on("presence", { event: "join" }, syncCollaborators);
     channel.on("presence", { event: "leave" }, syncCollaborators);
+
+    if (options.onMembershipChanged) {
+      channel.on("broadcast", { event: "membership-changed" }, ({ payload }) => {
+        if (typeof payload?.userId === "string") options.onMembershipChanged?.(payload.userId);
+      });
+    }
 
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED" && !this.destroyed) {

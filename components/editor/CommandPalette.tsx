@@ -11,9 +11,11 @@ import { CommandPaletteShell, type PaletteCommand } from "@/components/shared/Co
 interface CommandPaletteProps {
   projectId: string;
   canEdit: boolean;
+  canShare: boolean;
   onGoToLine: () => void;
   onFindInFile: () => void;
   onOpenSettings: () => void;
+  onOpenShare: () => void;
   onRun: () => void;
 }
 
@@ -27,9 +29,11 @@ export function CommandPalette(props: CommandPaletteProps) {
 function CommandPaletteContent({
   projectId,
   canEdit,
+  canShare,
   onGoToLine,
   onFindInFile,
   onOpenSettings,
+  onOpenShare,
   onRun,
   onClose,
 }: CommandPaletteProps & { onClose: () => void }) {
@@ -95,6 +99,18 @@ function CommandPaletteContent({
         icon: "⚙",
         run: onOpenSettings,
       },
+      ...(canShare
+        ? [
+            {
+              id: "share-project",
+              label: "Share Project",
+              hint: "Collaboration",
+              key: "⌘⇧S",
+              icon: "⚯",
+              run: onOpenShare,
+            },
+          ]
+        : []),
       {
         id: "back-to-dashboard",
         label: "Back to Dashboard",
@@ -123,7 +139,7 @@ function CommandPaletteContent({
       );
     }
     return list;
-  }, [dispatch, router, onGoToLine, onFindInFile, onOpenSettings, onRun, canEdit]);
+  }, [dispatch, router, onGoToLine, onFindInFile, onOpenSettings, onOpenShare, onRun, canEdit, canShare]);
 
   const fileItems: PaletteCommand[] = useMemo(
     () =>

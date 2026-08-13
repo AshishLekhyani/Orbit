@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { editor } from "monaco-editor";
 import type { ProjectRole } from "@prisma/client";
 import { StoreProvider } from "@/store/StoreProvider";
-import { ToastProvider } from "@/components/shared/ToastProvider";
+import { ToastProvider, useToast } from "@/components/shared/ToastProvider";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   setExplorerWidth,
@@ -28,6 +29,7 @@ import { EditorWorkspace } from "./workspace/EditorWorkspace";
 import { PreviewPanel } from "./preview/PreviewPanel";
 import { BottomPanel } from "./preview/BottomPanel";
 import { CommandPalette } from "./CommandPalette";
+import { ShareModal } from "./ShareModal";
 
 interface EditorShellProps {
   projectId: string;
@@ -65,8 +67,12 @@ function trackDrag(startEvent: React.MouseEvent, axis: "x" | "y", onDelta: (delt
   window.addEventListener("mouseup", handleMouseUp);
 }
 
-function EditorShellInner({ projectId, projectName, role, currentUser }: EditorShellProps) {
+function EditorShellInner({ projectId, projectName, role: initialRole, currentUser }: EditorShellProps) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [role, setRole] = useState<ProjectRole>(initialRole);
+  const [shareOpen, setShareOpen] = useState(false);
   const explorerOpen = useAppSelector((state) => state.ui.explorerOpen);
   const explorerWidth = useAppSelector((state) => state.ui.explorerWidth);
   const previewOpen = useAppSelector((state) => state.ui.previewOpen);
@@ -89,19 +95,43 @@ function EditorShellInner({ projectId, projectName, role, currentUser }: EditorS
   const supabaseRef = useRef(createClient());
   const presenceRef = useRef<ProjectPresenceChannel | null>(null);
 
+  const handleMembershipChanged = useCallback(
+    async (changedUserId: string) => {
+      if (changedUserId !== currentUser.id) return;
+
+      const response = await fetch(`/api/projects/${projectId}`).catch(() => null);
+      const newRole: ProjectRole | null =
+        response && response.ok ? ((await response.json()).project?.role ?? null) : null;
+
+      if (!newRole) {
+        toast("You no longer have access to this project", undefined, "danger");
+        router.push("/dashboard");
+        return;
+      }
+
+      setRole((prev) => {
+        if (prev === newRole) return prev;
+        toast(`Your role on this project changed to ${newRole.charAt(0)}${newRole.slice(1).toLowerCase()}`);
+        return newRole;
+      });
+    },
+    [projectId, currentUser.id, router, toast],
+  );
+
   useEffect(() => {
     const presence = new ProjectPresenceChannel({
       supabase: supabaseRef.current,
       projectId,
       localUser: currentUser,
       onCollaboratorsChange: (collaborators) => dispatch(setCollaborators(collaborators)),
+      onMembershipChanged: handleMembershipChanged,
     });
     presenceRef.current = presence;
     return () => {
       presence.destroy();
       presenceRef.current = null;
     };
-  }, [projectId, currentUser, dispatch]);
+  }, [projectId, currentUser, dispatch, handleMembershipChanged]);
 
   useEffect(() => {
     const activePath = openTabs.find((tab) => tab.fileId === activeFileId)?.path ?? null;
@@ -189,6 +219,11 @@ function EditorShellInner({ projectId, projectName, role, currentUser }: EditorS
         dispatch(setSearchOpen(true));
         return;
       }
+      if (meta && event.shiftKey && event.key.toLowerCase() === "s" && role === "OWNER") {
+        event.preventDefault();
+        setShareOpen(true);
+        return;
+      }
       if (meta && event.key.toLowerCase() === "f") {
         event.preventDefault();
         triggerFindInFile();
@@ -217,7 +252,7 @@ function EditorShellInner({ projectId, projectName, role, currentUser }: EditorS
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [dispatch, commandPaletteOpen, canEdit, triggerFindInFile, triggerGoToLine, triggerRun]);
+  }, [dispatch, commandPaletteOpen, canEdit, role, triggerFindInFile, triggerGoToLine, triggerRun]);
 
   function handleExplorerResizeStart(event: React.MouseEvent) {
     const startWidth = explorerWidth;
@@ -242,6 +277,8 @@ function EditorShellInner({ projectId, projectName, role, currentUser }: EditorS
         settingsOpen={settingsOpen}
         onSettingsOpenChange={setSettingsOpen}
         onRun={triggerRun}
+        canShare={role === "OWNER"}
+        onOpenShare={() => setShareOpen(true)}
       />
 
       <div className="flex min-h-0 flex-1">
@@ -310,11 +347,22 @@ function EditorShellInner({ projectId, projectName, role, currentUser }: EditorS
       <CommandPalette
         projectId={projectId}
         canEdit={canEdit}
+        canShare={role === "OWNER"}
         onGoToLine={triggerGoToLine}
         onFindInFile={triggerFindInFile}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenShare={() => setShareOpen(true)}
         onRun={triggerRun}
       />
+
+      {role === "OWNER" && (
+        <ShareModal
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          projectId={projectId}
+          projectName={projectName}
+        />
+      )}
     </div>
   );
 }
