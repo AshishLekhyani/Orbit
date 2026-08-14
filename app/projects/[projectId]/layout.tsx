@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getProjectRole } from "@/lib/auth/projectAccess";
+import { getCurrentUserId, getProjectRole } from "@/lib/auth/projectAccess";
 
 interface ProjectLayoutProps {
   children: React.ReactNode;
@@ -8,17 +7,14 @@ interface ProjectLayoutProps {
 }
 
 export default async function ProjectLayout({ children, params }: ProjectLayoutProps) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId();
 
-  if (!user) {
+  if (!userId) {
     redirect("/signin");
   }
 
   const { projectId } = await params;
-  const role = await getProjectRole(projectId, user.id);
+  const role = await getProjectRole(projectId, userId);
 
   if (!role) {
     notFound();

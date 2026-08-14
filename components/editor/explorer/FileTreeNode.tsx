@@ -19,7 +19,10 @@ interface FileTreeNodeProps {
   isDirty: boolean;
   isDropTarget: boolean;
   isDragging: boolean;
+  tabIndex: number;
+  nodeRef: (element: HTMLDivElement | null) => void;
   onClick: () => void;
+  onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => void;
   onContextMenu: (event: React.MouseEvent) => void;
   onDragStart: (event: React.DragEvent) => void;
   onDragOver: (event: React.DragEvent) => void;
@@ -35,7 +38,10 @@ export function FileTreeNode({
   isDirty,
   isDropTarget,
   isDragging,
+  tabIndex,
+  nodeRef,
   onClick,
+  onKeyDown,
   onContextMenu,
   onDragStart,
   onDragOver,
@@ -47,7 +53,14 @@ export function FileTreeNode({
 
   return (
     <div
+      ref={nodeRef}
+      role="treeitem"
+      aria-level={node.depth + 1}
+      aria-selected={isActive}
+      aria-expanded={node.isDirectory ? isExpanded : undefined}
+      tabIndex={tabIndex}
       onClick={onClick}
+      onKeyDown={onKeyDown}
       onContextMenu={onContextMenu}
       draggable
       onDragStart={onDragStart}
@@ -56,7 +69,7 @@ export function FileTreeNode({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
       style={{ paddingLeft: 10 + node.depth * 14, opacity: isDragging ? 0.4 : 1 }}
-      className={`flex h-6.25 cursor-pointer items-center gap-1.75 rounded-sm pr-2 select-none ${
+      className={`flex h-6.25 cursor-pointer items-center gap-1.75 rounded-sm pr-2 select-none outline-none focus-visible:shadow-[inset_0_0_0_1px_var(--color-accent)] ${
         isActive ? "bg-[#191B1F]" : "hover:bg-[#191B1F]"
       } ${isDropTarget ? "shadow-[inset_0_0_0_1px_var(--color-accent)]" : ""}`}
     >
@@ -87,6 +100,7 @@ export function FileTreeRenameInput({
 }) {
   const [value, setValue] = useState(initialValue);
   const inputRef = useRef<HTMLInputElement>(null);
+  const settledRef = useRef(false);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -94,12 +108,20 @@ export function FileTreeRenameInput({
   }, []);
 
   function commit() {
+    if (settledRef.current) return;
+    settledRef.current = true;
     const trimmed = value.trim();
     if (trimmed) {
       onSubmit(trimmed);
     } else {
       onCancel();
     }
+  }
+
+  function cancel() {
+    if (settledRef.current) return;
+    settledRef.current = true;
+    onCancel();
   }
 
   return (
@@ -115,7 +137,7 @@ export function FileTreeRenameInput({
         onBlur={commit}
         onKeyDown={(event) => {
           if (event.key === "Enter") commit();
-          if (event.key === "Escape") onCancel();
+          if (event.key === "Escape") cancel();
         }}
         className="h-5.5 flex-1 rounded-xs border border-accent bg-bg-editor px-1 text-ui text-text-primary outline-none"
       />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { OrbitLogo } from "@/components/shared/OrbitLogo";
 import { SettingsModal } from "@/components/shared/SettingsModal";
@@ -39,7 +39,24 @@ export function TopBar({
   const followingUserId = useAppSelector((state) => state.collaboration.followingUserId);
   const collaborators = useAppSelector((state) => state.collaboration.collaborators);
   const [moreOpen, setMoreOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMoreOpen(false);
+    }
+    function handlePointerDown(event: MouseEvent) {
+      if (!moreMenuRef.current?.contains(event.target as Node)) setMoreOpen(false);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, [moreOpen]);
 
   const save = SAVE_LABEL[saveState] ?? SAVE_LABEL.idle;
   const followedName = collaborators.find((c) => c.userId === followingUserId)?.name;
@@ -69,6 +86,7 @@ export function TopBar({
           Following {followedName}
           <button
             onClick={() => dispatch(setFollowing(null))}
+            aria-label="Stop following"
             className="grid h-4.25 w-4.25 place-items-center rounded-full text-[10px] text-text-tertiary hover:bg-border-strong hover:text-text-primary"
           >
             ✕
@@ -104,17 +122,20 @@ export function TopBar({
         <span className="font-mono text-[10px] opacity-70">⌘↵</span>
       </button>
 
-      <div className="relative">
+      <div className="relative" ref={moreMenuRef}>
         <button
           onClick={() => setMoreOpen((value) => !value)}
+          aria-label="More actions"
+          aria-haspopup="menu"
+          aria-expanded={moreOpen}
           className="rounded-sm px-2 py-1.5 text-sm leading-none text-text-tertiary hover:bg-[#17191D] hover:text-text-primary"
         >
           ···
         </button>
         {moreOpen && (
           <div
-            onMouseLeave={() => setMoreOpen(false)}
-            className="absolute top-8 right-0 z-60 w-48 rounded-md border border-border-strong bg-bg-raised p-1.25 shadow-[0_16px_40px_rgba(0,0,0,0.55)]"
+            role="menu"
+            className="absolute top-8 right-0 z-60 w-53.5 rounded-md border border-border-strong bg-bg-raised p-1.25 shadow-[0_16px_40px_rgba(0,0,0,0.55)]"
           >
             <button
               onClick={() => {

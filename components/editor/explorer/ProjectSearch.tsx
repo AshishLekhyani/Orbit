@@ -47,12 +47,15 @@ export function ProjectSearch({ projectId, onOpenAtLine }: ProjectSearchProps) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search in project"
+          aria-label="Search in project"
           className="h-7 w-full rounded-xs border border-border-strong bg-bg-editor px-2.25 font-mono text-[11.5px] text-text-primary outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/12"
         />
         <div className="mt-2 flex items-center gap-2.5">
           <button
             onClick={() => setCaseSensitive((value) => !value)}
             title="Match case"
+            aria-label="Match case"
+            aria-pressed={caseSensitive}
             className={`rounded-xs border border-border-strong px-1.5 py-0.5 font-mono text-[10px] ${
               caseSensitive ? "bg-accent text-on-accent" : "bg-transparent text-text-tertiary"
             }`}
@@ -62,6 +65,8 @@ export function ProjectSearch({ projectId, onOpenAtLine }: ProjectSearchProps) {
           <button
             onClick={() => setWholeWord((value) => !value)}
             title="Whole word"
+            aria-label="Whole word"
+            aria-pressed={wholeWord}
             className={`rounded-xs border border-border-strong px-1.5 py-0.5 font-mono text-[10px] ${
               wholeWord ? "bg-accent text-on-accent" : "bg-transparent text-text-tertiary"
             }`}
@@ -73,12 +78,12 @@ export function ProjectSearch({ projectId, onOpenAtLine }: ProjectSearchProps) {
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-1 py-1.5">
         {query.trim().length < 2 && (
-          <div className="px-2 py-4 text-[11.5px] leading-relaxed text-text-faint">
+          <div className="px-2 py-4 text-[11.5px] leading-relaxed text-text-dim">
             Search across every file in this project. ⇧⌘F opens it from anywhere.
           </div>
         )}
         {query.trim().length >= 2 && !isFetching && results.length === 0 && (
-          <div className="px-2 py-4 text-[11.5px] leading-relaxed text-text-faint">
+          <div className="px-2 py-4 text-[11.5px] leading-relaxed text-text-dim">
             No matches for &quot;{query}&quot;. Try a different term or turn off match case.
           </div>
         )}

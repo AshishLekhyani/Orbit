@@ -42,11 +42,23 @@ export function CollaboratorPresence() {
         return (
           <span
             key={collaborator.userId}
+            role="button"
+            tabIndex={0}
+            aria-pressed={isFollowing}
+            aria-label={`${collaborator.name} — ${doing}${isFollowing ? " — following" : ""}`}
             onMouseEnter={() => setHoveredId(collaborator.userId)}
             onMouseLeave={() => setHoveredId(null)}
+            onFocus={() => setHoveredId(collaborator.userId)}
+            onBlur={() => setHoveredId(null)}
             onClick={() => dispatch(setFollowing(isFollowing ? null : collaborator.userId))}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                dispatch(setFollowing(isFollowing ? null : collaborator.userId));
+              }
+            }}
             title={`${collaborator.name} — ${doing}`}
-            className="relative -ml-1.5 grid h-5.5 w-5.5 cursor-pointer place-items-center rounded-full text-[9.5px] font-semibold"
+            className="relative -ml-1.5 grid h-5.5 w-5.5 cursor-pointer place-items-center rounded-full text-[9.5px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{
               background: collaborator.color,
               color: "#0D0E10",
@@ -55,7 +67,10 @@ export function CollaboratorPresence() {
           >
             {initialsFor(collaborator.name)}
             {hoveredId === collaborator.userId && (
-              <span className="absolute top-7 right-[-6px] z-40 whitespace-nowrap rounded-md border border-border-strong bg-bg-raised px-2.25 py-1.5 text-left shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+              <span
+                className="absolute top-7 right-[-6px] z-40 whitespace-nowrap rounded-sm border border-border-strong px-2.25 py-1.5 text-left shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
+                style={{ background: "#1B1D21" }}
+              >
                 <span className="block text-[11.5px] font-medium text-text-primary">{collaborator.name}</span>
                 <span className="mt-0.5 block font-mono text-[10.5px] text-text-tertiary">{doing}</span>
               </span>

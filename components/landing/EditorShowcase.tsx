@@ -1,6 +1,6 @@
 export function EditorShowcase() {
   return (
-    <div className="mt-[72px] w-full max-w-[1080px] overflow-hidden rounded-t-md border border-[#24262B] bg-[#121316] shadow-[0_40px_120px_rgba(0,0,0,0.6)]">
+    <div className="mt-[72px] w-full max-w-[1080px] overflow-hidden rounded-t-xl border border-[#24262B] bg-[#121316] shadow-[0_-1px_0_rgba(255,255,255,0.03),0_40px_120px_rgba(0,0,0,0.6)]">
       <div className="flex h-[38px] items-center gap-2.5 border-b border-border-subtle bg-[#141518] px-3.5">
         <div className="flex gap-1.5">
           <span className="block h-[9px] w-[9px] rounded-full bg-[#2E3036]" />
@@ -21,7 +21,7 @@ export function EditorShowcase() {
       </div>
 
       <div className="grid min-h-[320px] grid-cols-1 md:grid-cols-[1.25fr_1fr]">
-        <div className="border-r border-border-subtle py-4 font-mono text-[12.5px] leading-[21px]">
+        <div className="border-r border-border-subtle pt-4 font-mono text-[12.5px] leading-[21px]">
           <CodeLine n={1}>
             <Kw>const</Kw> <Plain>projects </Plain>
             <Pn>=</Pn> <Fn>load</Fn>

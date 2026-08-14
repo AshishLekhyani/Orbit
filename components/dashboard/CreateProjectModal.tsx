@@ -27,7 +27,7 @@ interface CreateProjectModalProps {
 
 export function CreateProjectModal({ open, onClose, initialTemplate }: CreateProjectModalProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Create project" maxWidthClassName="max-w-[480px]">
+    <Modal open={open} onClose={onClose} title="Create project" maxWidthClassName="max-w-[560px]">
       {open && (
         <CreateProjectForm
           key={initialTemplate ?? "landing-page"}
@@ -83,6 +83,7 @@ function CreateProjectForm({
             key={stack.name}
             disabled={!stack.available}
             title={stack.available ? undefined : "Coming soon"}
+            aria-pressed={stack.available ? true : undefined}
             className={`rounded-sm border p-2.5 text-left ${
               !stack.available
                 ? "cursor-not-allowed border-border-subtle text-text-faint"
@@ -92,7 +93,9 @@ function CreateProjectForm({
             <div className={`text-xs ${stack.available ? "text-text-primary" : "text-text-faint"}`}>
               {stack.name}
             </div>
-            <div className="mt-0.5 text-[10.5px] text-text-faint">{stack.note}</div>
+            <div className={`mt-0.5 text-[10.5px] ${stack.available ? "text-text-dim" : "text-text-faint"}`}>
+              {stack.note}
+            </div>
           </button>
         ))}
       </div>
@@ -105,14 +108,22 @@ function CreateProjectForm({
           <button
             key={option.id}
             onClick={() => setTemplate(option.id)}
-            className={`rounded-sm border p-2.5 text-left ${
+            aria-pressed={template === option.id}
+            className={`overflow-hidden rounded-sm border text-left ${
               template === option.id
                 ? "border-accent bg-[#1A1C20]"
                 : "border-border-strong bg-bg-editor"
             }`}
           >
-            <div className="text-xs text-text-primary">{option.name}</div>
-            <div className="mt-0.5 text-[10.5px] text-text-faint">{option.note}</div>
+            <div className="grid h-13 place-items-center border-b border-[#1F2126] bg-[repeating-linear-gradient(135deg,#17181C_0_7px,#1B1D21_7px_14px)]">
+              <span className="font-mono text-[9.5px] tracking-[0.06em] text-syntax-comment">
+                html/css/js
+              </span>
+            </div>
+            <div className="p-2.5">
+              <div className="text-xs text-text-primary">{option.name}</div>
+              <div className="mt-0.5 text-[10.5px] text-text-dim">{option.note}</div>
+            </div>
           </button>
         ))}
       </div>

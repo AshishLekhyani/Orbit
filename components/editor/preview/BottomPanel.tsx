@@ -118,14 +118,26 @@ export function BottomPanel({ open, height, onOpenAtLine }: BottomPanelProps) {
       {open && (
         <div className="flex-1 overflow-auto py-1.5 font-mono text-[11.5px] leading-loose">
           {rows.length === 0 && (
-            <div className="px-3.5 py-4 text-[11.5px] text-text-faint">{emptyText}</div>
+            <div className="px-3.5 py-4 text-[11.5px] text-text-dim">{emptyText}</div>
           )}
           {rows.map((row) => (
             <div
               key={row.id}
+              role={row.onClick ? "button" : undefined}
+              tabIndex={row.onClick ? 0 : undefined}
               onClick={row.onClick}
+              onKeyDown={
+                row.onClick
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        row.onClick?.();
+                      }
+                    }
+                  : undefined
+              }
               style={{ borderLeft: `2px solid ${row.rail}`, cursor: row.onClick ? "pointer" : "default" }}
-              className="flex gap-2.5 px-3.5 py-0.5 hover:bg-bg-raised"
+              className="flex gap-2.5 px-3.5 py-0.5 outline-none hover:bg-bg-raised focus-visible:bg-bg-raised"
             >
               <span className="w-2.5 flex-none" style={{ color: row.glyphColor }}>
                 {row.glyph}
@@ -133,7 +145,7 @@ export function BottomPanel({ open, height, onOpenAtLine }: BottomPanelProps) {
               <span className="wrap-break-word whitespace-pre-wrap" style={{ color: row.fg }}>
                 {row.text}
               </span>
-              {row.meta && <span className="ml-auto flex-none text-text-faint">{row.meta}</span>}
+              {row.meta && <span className="ml-auto flex-none text-text-dim">{row.meta}</span>}
             </div>
           ))}
         </div>

@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/auth/projectAccess";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { signOut } from "./actions";
 
 export const metadata: Metadata = { title: "Dashboard — Orbit" };
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId();
 
-  const profile = user
-    ? await prisma.profile.findUnique({ where: { id: user.id } })
+  const profile = userId
+    ? await prisma.profile.findUnique({ where: { id: userId } })
     : null;
 
   return (

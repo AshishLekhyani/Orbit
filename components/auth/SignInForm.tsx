@@ -69,6 +69,7 @@ export function SignInForm() {
       return;
     }
 
+    await fetch("/api/auth/ensure-profile", { method: "POST" }).catch(() => {});
     router.push("/dashboard");
   }
 

@@ -48,10 +48,10 @@ export function CommandPaletteShell({ commands, extraItems = [], onClose }: Comm
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="h-fit w-140 max-w-[92vw] overflow-hidden rounded-md border border-[#2E3036] bg-bg-raised shadow-[0_32px_90px_rgba(0,0,0,0.65)]"
+        className="h-fit w-140 max-w-[92vw] overflow-hidden rounded-lg border border-[#2E3036] bg-bg-raised shadow-[0_32px_90px_rgba(0,0,0,0.65)]"
       >
         <div className="flex items-center gap-2.5 border-b border-[#22242A] px-3.5">
-          <span className="font-mono text-title text-accent">›</span>
+          <span className="font-mono text-[13px] text-accent">›</span>
           <input
             ref={inputRef}
             value={query}
@@ -69,22 +69,33 @@ export function CommandPaletteShell({ commands, extraItems = [], onClose }: Comm
               } else if (event.key === "Enter") {
                 event.preventDefault();
                 runItem(clampedIndex);
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                onClose();
               }
             }}
             placeholder="Search commands and files…"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="command-palette-listbox"
+            aria-activedescendant={pool[clampedIndex] ? `command-palette-option-${pool[clampedIndex].id}` : undefined}
+            aria-autocomplete="list"
             className="h-11.5 flex-1 bg-transparent text-body text-text-primary outline-none placeholder:text-text-faint"
           />
           <span className="rounded-xs border border-border-strong px-1.25 py-0.5 font-mono text-[10px] text-text-faint">
             esc
           </span>
         </div>
-        <div className="max-h-84 overflow-auto p-1.5">
-          <div className="px-2.5 py-1.5 text-[10px] tracking-[0.12em] text-text-faint uppercase">
+        <div id="command-palette-listbox" role="listbox" className="max-h-84 overflow-auto p-1.5">
+          <div className="px-2.5 py-1.5 text-[10px] tracking-[0.12em] text-text-dim uppercase">
             {query ? "Results" : "Recent"}
           </div>
           {pool.map((item, index) => (
             <div
               key={item.id}
+              id={`command-palette-option-${item.id}`}
+              role="option"
+              aria-selected={index === clampedIndex}
               onMouseEnter={() => setActiveIndex(index)}
               onClick={() => runItem(index)}
               className="flex cursor-pointer items-center gap-2.5 rounded-sm px-2.5 py-2"

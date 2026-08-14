@@ -204,11 +204,13 @@ function ShareModalContent({
             onChange={(event) => setInviteEmail(event.target.value)}
             onKeyDown={(event) => event.key === "Enter" && handleInvite()}
             placeholder="email@example.com"
+            aria-label="Invite by email"
             className="h-8.5 flex-1 rounded-btn border border-border-strong bg-bg-editor px-2.5 text-ui text-text-primary outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/[0.14]"
           />
           <select
             value={inviteRole}
             onChange={(event) => setInviteRole(event.target.value as ShareRole)}
+            aria-label="Role for invited member"
             className="h-8.5 rounded-btn border border-border-strong bg-bg-editor px-2 text-ui text-text-primary outline-none cursor-pointer"
           >
             <option value="EDITOR">Editor</option>

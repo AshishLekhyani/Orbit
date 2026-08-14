@@ -194,6 +194,7 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
         <button
           onClick={rebuild}
           title="Refresh preview"
+          aria-label="Refresh preview"
           className="grid h-6 w-6 flex-none place-items-center rounded-sm text-ui text-text-secondary hover:bg-[#1B1D21] hover:text-text-primary"
         >
           ↻
@@ -211,6 +212,8 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
               key={option.id}
               onClick={() => dispatch(setDevice(option.id))}
               title={option.name}
+              aria-label={option.name}
+              aria-pressed={device === option.id}
               className="grid h-5.5 w-6.5 place-items-center text-[10px]"
               style={{ color: device === option.id ? "#E9E8E4" : "#6E7075" }}
             >
@@ -223,6 +226,7 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
             dispatch(setZoom(ZOOM_STEPS[(ZOOM_STEPS.indexOf(zoom) + 1) % ZOOM_STEPS.length]))
           }
           title="Zoom"
+          aria-label={`Zoom, currently ${zoom}%`}
           className="flex-none rounded-sm border border-[#22242A] px-1.5 py-0.5 font-mono text-[10.5px] text-text-secondary hover:border-[#3A3D44] hover:text-text-primary"
         >
           {zoom}%
@@ -230,6 +234,7 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
         <button
           onClick={handleOpenInNewTab}
           title="Open in new tab"
+          aria-label="Open preview in new tab"
           className="grid h-6 w-6 flex-none place-items-center rounded-sm text-ui text-text-secondary hover:bg-[#1B1D21] hover:text-text-primary"
         >
           ↗

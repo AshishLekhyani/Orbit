@@ -38,11 +38,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed right-4.5 bottom-4.5 z-100 flex flex-col items-end gap-2">
+      <div
+        className="fixed right-4.5 bottom-4.5 z-100 flex flex-col items-end gap-2"
+        role="status"
+        aria-live="polite"
+      >
         {toasts.map((entry) => (
           <div
             key={entry.id}
-            className="flex items-center gap-2.25 rounded-sm border border-border-strong bg-bg-raised py-2.25 pr-3.25 pl-2.5 shadow-[0_12px_32px_rgba(0,0,0,0.5)]"
+            className="flex items-center gap-2.25 rounded-btn border border-border-strong bg-bg-raised py-2.25 pr-3.25 pl-2.5 shadow-[0_12px_32px_rgba(0,0,0,0.5)]"
             style={{ borderLeft: `2px solid ${RAIL_COLOR[entry.variant]}` }}
           >
             <span

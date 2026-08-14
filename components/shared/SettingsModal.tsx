@@ -48,11 +48,13 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (value: boo
 }
 
 function Stepper({
+  label,
   value,
   min,
   max,
   onChange,
 }: {
+  label: string;
   value: number;
   min: number;
   max: number;
@@ -62,6 +64,7 @@ function Stepper({
     <div className="flex items-center overflow-hidden rounded-sm border border-border-strong">
       <button
         onClick={() => onChange(Math.max(min, value - 1))}
+        aria-label={`Decrease ${label}`}
         className="grid h-6 w-6 place-items-center bg-bg-editor text-ui text-text-tertiary hover:text-text-primary"
       >
         −
@@ -69,6 +72,7 @@ function Stepper({
       <span className="w-8.5 text-center font-mono text-ui text-text-primary">{value}</span>
       <button
         onClick={() => onChange(Math.min(max, value + 1))}
+        aria-label={`Increase ${label}`}
         className="grid h-6 w-6 place-items-center bg-bg-editor text-ui text-text-tertiary hover:text-text-primary"
       >
         +
@@ -178,6 +182,7 @@ function EditorSettings() {
     <>
       <SettingRow label="Font size" description="Editor and gutter type size">
         <Stepper
+          label="font size"
           value={settings.fontSize}
           min={11}
           max={20}
@@ -186,6 +191,7 @@ function EditorSettings() {
       </SettingRow>
       <SettingRow label="Tab size" description="Spaces inserted per indent level">
         <Stepper
+          label="tab size"
           value={settings.tabSize}
           min={2}
           max={8}

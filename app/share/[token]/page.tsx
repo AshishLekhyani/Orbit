@@ -26,7 +26,10 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 export default async function SharePage({ params }: SharePageProps) {
   const { token } = await params;
-  const link = await prisma.shareLink.findUnique({ where: { token } });
+  const [link, userId] = await Promise.all([
+    prisma.shareLink.findUnique({ where: { token } }),
+    getCurrentUserId(),
+  ]);
   const isValid = link && !link.revokedAt && (!link.expiresAt || link.expiresAt > new Date());
 
   if (!isValid) {
@@ -53,7 +56,6 @@ export default async function SharePage({ params }: SharePageProps) {
     );
   }
 
-  const userId = await getCurrentUserId();
   const permissionLabel = link.permission === "EDITOR" ? "edit" : "view";
 
   return (

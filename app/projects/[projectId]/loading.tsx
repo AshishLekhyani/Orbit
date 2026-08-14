@@ -1,15 +1,4 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import type { ProjectRole } from "@prisma/client";
-import type { LocalUser } from "@/lib/realtime/SupabaseYjsProvider";
-
-const EditorShell = dynamic(
-  () => import("./EditorShell").then((mod) => mod.EditorShell),
-  { ssr: false, loading: () => <EditorShellSkeleton /> },
-);
-
-function EditorShellSkeleton() {
+export default function ProjectLoading() {
   return (
     <div className="flex h-screen flex-col bg-bg-base">
       <div className="h-11 flex-none border-b border-border-subtle bg-bg-panel px-3.5 py-3">
@@ -32,13 +21,4 @@ function EditorShellSkeleton() {
       </div>
     </div>
   );
-}
-
-export function EditorShellLoader(props: {
-  projectId: string;
-  projectName: string;
-  role: ProjectRole;
-  currentUser: LocalUser;
-}) {
-  return <EditorShell {...props} />;
 }

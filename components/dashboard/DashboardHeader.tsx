@@ -38,8 +38,15 @@ export function DashboardHeader({
         setMenuOpen(false);
       }
     }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMenuOpen(false);
+    }
     window.addEventListener("mousedown", handleClick);
-    return () => window.removeEventListener("mousedown", handleClick);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [menuOpen]);
 
   return (
@@ -54,6 +61,7 @@ export function DashboardHeader({
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search projects…"
+          aria-label="Search projects"
           className="h-7.5 w-full rounded-sm border border-[#24262B] bg-bg-raised pr-2.75 pl-7.5 text-ui text-text-primary outline-none focus:border-[#3A3D44] focus:bg-[#1A1C20]"
         />
         <span className="pointer-events-none absolute top-2 left-2.5 h-2.75 w-2.75 rounded-full border-[1.4px] border-text-muted" />
@@ -74,13 +82,19 @@ export function DashboardHeader({
           <button
             onClick={() => setMenuOpen((value) => !value)}
             title={email}
+            aria-label={`Account menu — ${email}`}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
             className="grid h-6.5 w-6.5 place-items-center rounded-full bg-accent text-[10.5px] font-semibold text-on-accent"
           >
             {getInitials(email)}
           </button>
 
           {menuOpen && (
-            <div className="absolute top-9 right-0 z-20 w-52 rounded-md border border-border-strong bg-bg-raised p-1.25 shadow-[0_16px_40px_rgba(0,0,0,0.55)]">
+            <div
+              role="menu"
+              className="absolute top-9 right-0 z-20 w-52 rounded-md border border-border-strong bg-bg-raised p-1.25 shadow-[0_16px_40px_rgba(0,0,0,0.55)]"
+            >
               <div className="truncate px-2 py-1.5 text-xs text-text-muted">{email}</div>
               <button
                 onClick={onSignOut}

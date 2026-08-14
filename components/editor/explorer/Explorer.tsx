@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleFolderExpanded } from "@/store/slices/projectSlice";
 import { openTab, closeTab, setActiveFile, setSearchOpen } from "@/store/slices/editorSlice";
@@ -49,10 +49,99 @@ export function Explorer({ projectId, canEdit, dirtyFileIds, onOpenAtLine }: Exp
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | "root" | null>(null);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const rowRefs = useRef(new Map<string, HTMLDivElement>());
 
   const expandedSet = useMemo(() => new Set(expandedFolderIds), [expandedFolderIds]);
   const tree = useMemo(() => buildFileTree(files), [files]);
   const visible = useMemo(() => flattenVisibleTree(tree, expandedSet), [tree, expandedSet]);
+
+  const effectiveFocusedId =
+    focusedId && visible.some((node) => node.id === focusedId)
+      ? focusedId
+      : activeFileId && visible.some((node) => node.id === activeFileId)
+        ? activeFileId
+        : (visible[0]?.id ?? null);
+
+  function focusNode(id: string) {
+    setFocusedId(id);
+    rowRefs.current.get(id)?.focus();
+  }
+
+  function handleNodeKeyDown(event: React.KeyboardEvent<HTMLDivElement>, node: TreeNode, index: number) {
+    switch (event.key) {
+      case "ArrowDown": {
+        const next = visible[index + 1];
+        if (next) {
+          event.preventDefault();
+          focusNode(next.id);
+        }
+        break;
+      }
+      case "ArrowUp": {
+        const prev = visible[index - 1];
+        if (prev) {
+          event.preventDefault();
+          focusNode(prev.id);
+        }
+        break;
+      }
+      case "ArrowRight": {
+        if (!node.isDirectory) break;
+        event.preventDefault();
+        if (!expandedSet.has(node.id)) {
+          ensureExpanded(node.id);
+        } else {
+          const next = visible[index + 1];
+          if (next && next.parentId === node.id) focusNode(next.id);
+        }
+        break;
+      }
+      case "ArrowLeft": {
+        if (node.isDirectory && expandedSet.has(node.id)) {
+          event.preventDefault();
+          dispatch(toggleFolderExpanded(node.id));
+        } else if (node.parentId) {
+          event.preventDefault();
+          focusNode(node.parentId);
+        }
+        break;
+      }
+      case "Enter":
+      case " ": {
+        event.preventDefault();
+        openFile(node);
+        break;
+      }
+      case "F2": {
+        if (!canEdit) break;
+        event.preventDefault();
+        setRenamingId(node.id);
+        break;
+      }
+      case "Delete":
+      case "Backspace": {
+        if (!canEdit) break;
+        event.preventDefault();
+        handleDelete(node);
+        break;
+      }
+      case "ContextMenu": {
+        event.preventDefault();
+        if (!canEdit) break;
+        const rect = rowRefs.current.get(node.id)?.getBoundingClientRect();
+        if (rect) setContextMenu({ x: rect.left + 20, y: rect.bottom, node });
+        break;
+      }
+      case "F10": {
+        if (!event.shiftKey || !canEdit) break;
+        event.preventDefault();
+        const rect = rowRefs.current.get(node.id)?.getBoundingClientRect();
+        if (rect) setContextMenu({ x: rect.left + 20, y: rect.bottom, node });
+        break;
+      }
+    }
+  }
 
   function ensureExpanded(folderId: string) {
     if (!expandedFolderIds.includes(folderId)) dispatch(toggleFolderExpanded(folderId));
@@ -217,9 +306,11 @@ export function Explorer({ projectId, canEdit, dirtyFileIds, onOpenAtLine }: Exp
             setDropTarget(null);
           }}
           className="min-h-0 flex-1 overflow-auto py-1.5"
+          role="tree"
+          aria-label="Files"
         >
           {visible.length === 0 && !creating && (
-            <div className="px-3 py-4 text-[11.5px] leading-relaxed text-text-faint">
+            <div className="px-3 py-4 text-[11.5px] leading-relaxed text-text-dim">
               No files yet.
             </div>
           )}
@@ -240,7 +331,16 @@ export function Explorer({ projectId, canEdit, dirtyFileIds, onOpenAtLine }: Exp
                   isDirty={dirtyFileIds.has(node.id)}
                   isDropTarget={dropTarget === node.id}
                   isDragging={dragId === node.id}
-                  onClick={() => openFile(node)}
+                  tabIndex={node.id === effectiveFocusedId ? 0 : -1}
+                  nodeRef={(element) => {
+                    if (element) rowRefs.current.set(node.id, element);
+                    else rowRefs.current.delete(node.id);
+                  }}
+                  onClick={() => {
+                    setFocusedId(node.id);
+                    openFile(node);
+                  }}
+                  onKeyDown={(event) => handleNodeKeyDown(event, node, index)}
                   onContextMenu={(event) => {
                     event.preventDefault();
                     if (!canEdit) return;

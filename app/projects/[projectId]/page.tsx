@@ -23,15 +23,16 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectId } = await params;
   const userId = await getCurrentUserId();
-  const role = userId ? await getProjectRole(projectId, userId) : null;
 
-  const project = await getProjectById(projectId);
+  const [role, project, profile] = await Promise.all([
+    userId ? getProjectRole(projectId, userId) : Promise.resolve(null),
+    getProjectById(projectId),
+    userId ? prisma.profile.findUnique({ where: { id: userId } }) : Promise.resolve(null),
+  ]);
 
   if (!project || !role || !userId) {
     notFound();
   }
-
-  const profile = await prisma.profile.findUnique({ where: { id: userId } });
   const currentUser = {
     id: userId,
     name: profile?.displayName || profile?.email || "Anonymous",

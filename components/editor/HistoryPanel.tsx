@@ -129,6 +129,7 @@ export function HistoryPanel({ open, onClose, projectId, canMutate, onRestored }
         </span>
         <button
           onClick={onClose}
+          aria-label="Close version history"
           className="grid h-5.5 w-5.5 place-items-center rounded-sm text-ui text-text-tertiary hover:bg-[#1B1D21] hover:text-text-primary"
         >
           ✕
@@ -142,6 +143,7 @@ export function HistoryPanel({ open, onClose, projectId, canMutate, onRestored }
             onChange={(event) => setMessage(event.target.value)}
             onKeyDown={(event) => event.key === "Enter" && handleSave()}
             placeholder="Describe this change…"
+            aria-label="Describe this change"
             className="h-7.5 flex-1 rounded-sm border border-border-strong bg-bg-editor px-2 text-meta text-text-primary outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/[0.14]"
           />
           <button
@@ -176,6 +178,7 @@ export function HistoryPanel({ open, onClose, projectId, canMutate, onRestored }
           <button
             onClick={() => stepFile(-1)}
             title="Previous file"
+            aria-label="Previous file"
             disabled={!selectedVersion || selectedVersion.files.length < 2}
             className="text-ui text-text-tertiary hover:text-text-primary disabled:opacity-40"
           >
@@ -184,6 +187,7 @@ export function HistoryPanel({ open, onClose, projectId, canMutate, onRestored }
           <button
             onClick={() => stepFile(1)}
             title="Next file"
+            aria-label="Next file"
             disabled={!selectedVersion || selectedVersion.files.length < 2}
             className="text-ui text-text-tertiary hover:text-text-primary disabled:opacity-40"
           >
@@ -267,8 +271,17 @@ function VersionRow({
   const authorName = version.author?.displayName || version.author?.email || "Unknown";
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
       onClick={onClick}
-      className={`mb-0.5 cursor-pointer rounded-sm border-l-2 p-2 ${
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
+      className={`mb-0.5 cursor-pointer rounded-sm border-l-2 p-2 outline-none focus-visible:shadow-[inset_0_0_0_1px_var(--color-accent)] ${
         selected ? "border-accent bg-[#1A1C20]" : "border-transparent hover:bg-[#17191D]"
       }`}
     >
@@ -288,7 +301,7 @@ function VersionRow({
           {initialsFor(authorName)}
         </span>
         <span className="text-meta text-[#7A7C82]">{authorName}</span>
-        <span className="ml-auto font-mono text-meta text-text-faint">
+        <span className="ml-auto font-mono text-meta text-text-dim">
           {statLabel(version.additions, version.deletions)}
         </span>
       </div>

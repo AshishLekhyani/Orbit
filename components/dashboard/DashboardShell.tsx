@@ -138,16 +138,29 @@ function DashboardContent({ email, displayName, onSignOut }: DashboardShellProps
         </nav>
 
         <main className="px-8 pt-10 pb-16">
-          <h1 className="m-0 text-[24px] leading-[1.2] font-semibold tracking-tight text-text-primary">
-            {greeting}
-          </h1>
-          <p className="mt-2 text-body text-text-secondary">{SECTION_SUBTITLE[nav]}</p>
+          {isLoading ? (
+            <div
+              className="skeleton-shimmer h-6.5 w-65 rounded-sm"
+              style={{ background: "linear-gradient(90deg, #16171B 0px, #1E2025 120px, #16171B 240px)" }}
+            />
+          ) : (
+            <h1 className="m-0 text-[24px] leading-[1.2] font-semibold tracking-tight text-text-primary">
+              {greeting}
+            </h1>
+          )}
+          {isLoading ? (
+            <div className="mt-8.5 h-3 w-30 rounded-xs bg-bg-raised" />
+          ) : (
+            <p className="mt-2 text-body text-text-secondary">{SECTION_SUBTITLE[nav]}</p>
+          )}
 
           <div className="mt-10 mb-3.5 flex items-baseline justify-between">
             <h2 className="m-0 text-label text-text-muted uppercase">{SECTION_LABEL[nav]}</h2>
-            <span className="text-[12px] text-text-muted">
-              {filtered.length} {filtered.length === 1 ? "project" : "projects"}
-            </span>
+            {!isLoading && (
+              <span className="text-[12px] text-text-muted">
+                {filtered.length} {filtered.length === 1 ? "project" : "projects"}
+              </span>
+            )}
           </div>
 
           {isLoading ? (
@@ -155,7 +168,8 @@ function DashboardContent({ email, displayName, onSignOut }: DashboardShellProps
               {[1, 2, 3, 4, 5, 6].map((key) => (
                 <div
                   key={key}
-                  className="h-32 animate-pulse rounded-md border border-[#1F2126] bg-[#131418]"
+                  className="skeleton-shimmer h-32 rounded-md border border-border-subtle"
+                  style={{ background: "linear-gradient(90deg, #131418 0px, #191A1E 120px, #131418 240px)" }}
                 />
               ))}
             </div>

@@ -18,7 +18,11 @@ export function EditorTabs({ onFindInFile }: EditorTabsProps) {
   if (openTabs.length === 0) return null;
 
   return (
-    <div className="flex h-8.75 flex-none items-stretch overflow-x-auto border-b border-border-subtle bg-bg-panel">
+    <div
+      role="tablist"
+      aria-label="Open files"
+      className="flex h-8.75 flex-none items-stretch overflow-x-auto border-b border-border-subtle bg-bg-panel"
+    >
       {openTabs.map((tab) => {
         const isActive = tab.fileId === activeFileId;
         const isDirty = dirtyFileIds.includes(tab.fileId);
@@ -26,8 +30,20 @@ export function EditorTabs({ onFindInFile }: EditorTabsProps) {
         return (
           <div
             key={tab.fileId}
+            role="tab"
+            aria-selected={isActive}
+            tabIndex={isActive ? 0 : -1}
             onClick={() => dispatch(setActiveFile(tab.fileId))}
-            className="flex cursor-pointer items-center gap-2 border-r border-border-subtle py-0 pr-2.5 pl-3.25 whitespace-nowrap hover:bg-[#17191D]"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                dispatch(setActiveFile(tab.fileId));
+              } else if (event.key === "Delete" || event.key === "Backspace") {
+                event.preventDefault();
+                dispatch(closeTab(tab.fileId));
+              }
+            }}
+            className="flex cursor-pointer items-center gap-2 border-r border-border-subtle py-0 pr-2.5 pl-3.25 whitespace-nowrap outline-none hover:bg-[#17191D] focus-visible:bg-[#17191D]"
             style={{
               background: isActive ? "#101114" : "transparent",
               boxShadow: isActive ? "inset 0 2px 0 var(--color-accent)" : "none",
@@ -39,11 +55,19 @@ export function EditorTabs({ onFindInFile }: EditorTabsProps) {
             <span
               role="button"
               tabIndex={0}
+              aria-label={isDirty ? `${name} — unsaved changes, close` : `Close ${name}`}
               onClick={(event) => {
                 event.stopPropagation();
                 dispatch(closeTab(tab.fileId));
               }}
-              className="w-3.5 rounded-xs text-center text-ui hover:bg-border-strong hover:text-text-primary"
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  dispatch(closeTab(tab.fileId));
+                }
+              }}
+              className="w-3.5 rounded-xs text-center text-ui outline-none hover:bg-border-strong hover:text-text-primary focus-visible:bg-border-strong focus-visible:text-text-primary"
               style={{ color: isDirty ? "var(--color-accent)" : "#55585E" }}
             >
               {isDirty ? "●" : "✕"}
