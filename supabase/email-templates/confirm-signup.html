@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark light" />
+<meta name="supported-color-schemes" content="dark light" />
+<title>Welcome to Orbit</title>
+</head>
+<body style="margin:0; padding:0; background-color:#0D0E10; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;">
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0;">
+    Confirm your email to finish signing in to Orbit &#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0D0E10;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:100%;">
+
+          <!-- Wordmark -->
+          <tr>
+            <td style="padding:0 4px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align:middle; padding-right:9px;">
+                    <table role="presentation" width="26" height="26" cellpadding="0" cellspacing="0" border="0" style="width:26px; height:26px; background-color:#17181C; border:1px solid #2A2C31; border-radius:6px;">
+                      <tr>
+                        <td align="center" style="font-family:Georgia, 'Times New Roman', serif; font-size:15px; line-height:26px; color:#E8833A; font-weight:bold;">&#9671;</td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td style="vertical-align:middle; font-family:'Segoe UI', Helvetica, Arial, sans-serif; font-size:15px; font-weight:700; color:#E9E8E4; letter-spacing:-0.01em;">
+                    Orbit
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td style="background-color:#101114; border:1px solid #1C1E22; border-radius:12px; padding:0; overflow:hidden;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+
+                <tr>
+                  <td style="padding:40px 40px 8px; text-align:center;">
+                    <div style="font-family:Georgia, 'Times New Roman', serif; font-size:34px; line-height:1; color:#E8833A;">&#9671;</div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:16px 40px 4px; text-align:center; font-family:'Segoe UI', Helvetica, Arial, sans-serif; font-size:22px; line-height:1.3; font-weight:700; color:#E9E8E4;">
+                    Welcome to Orbit
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:0 40px 28px; text-align:center; font-family:'Segoe UI', Helvetica, Arial, sans-serif; font-size:14px; line-height:1.6; color:#9A9B9F;">
+                    Click the button below to confirm your email and finish signing in. This link is valid for 60&nbsp;minutes and can only be used once.
+                  </td>
+                </tr>
+
+                <!-- Button -->
+                <tr>
+                  <td align="center" style="padding:0 40px 32px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="border-radius:7px; background-color:#E8833A;">
+                          <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block; background-color:#E8833A; color:#17110B; font-family:'Segoe UI', Helvetica, Arial, sans-serif; font-size:14px; font-weight:700; text-decoration:none; padding:13px 28px; border-radius:7px; letter-spacing:0.01em;">
+                            Confirm and sign in
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Divider -->
+                <tr>
+                  <td style="padding:0 40px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="border-top:1px solid #1C1E22; font-size:0; line-height:0;">&nbsp;</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:28px 40px 10px; text-align:center; font-family:'Segoe UI', Helvetica, Arial, sans-serif; font-size:13px; line-height:1.5; color:#8B8C90;">
+                    On a different device? Enter this code instead:
+                  </td>
+                </tr>
+
+                <tr>
+                  <td align="center" style="padding:0 40px 36px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background-color:#17181C; border:1px solid #2A2C31; border-radius:8px;">
+                      <tr>
+                        <td style="padding:14px 26px; font-family:'Courier New', Consolas, monospace; font-size:26px; font-weight:700; letter-spacing:0.3em; color:#E9E8E4; text-align:center;">
+                          {{ .Token }}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:28px 20px 0; text-align:center; font-family:'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:1.6; color:#55585E;">
+              If you didn&rsquo;t request this email, you can safely ignore it &mdash; no account changes were made.
+              <br />
+              This is an automated message from Orbit. Please don&rsquo;t reply.
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
