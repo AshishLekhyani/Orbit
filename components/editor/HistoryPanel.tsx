@@ -45,9 +45,19 @@ interface HistoryPanelProps {
   projectId: string;
   canMutate: boolean;
   onRestored: () => void;
+  width: number;
+  onResizeStart: (event: React.MouseEvent) => void;
 }
 
-export function HistoryPanel({ open, onClose, projectId, canMutate, onRestored }: HistoryPanelProps) {
+export function HistoryPanel({
+  open,
+  onClose,
+  projectId,
+  canMutate,
+  onRestored,
+  width,
+  onResizeStart,
+}: HistoryPanelProps) {
   const { toast } = useToast();
   const { data: versions = [], isLoading } = useGetVersionsQuery(projectId, { skip: !open });
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
@@ -122,7 +132,14 @@ export function HistoryPanel({ open, onClose, projectId, canMutate, onRestored }
   if (!open) return null;
 
   return (
-    <aside className="absolute top-0 right-0 bottom-0 z-20 flex w-80 flex-col border-l border-border-subtle bg-bg-panel shadow-[-18px_0_40px_rgba(0,0,0,0.45)]">
+    <aside
+      style={{ width }}
+      className="absolute top-0 right-0 bottom-0 z-20 flex flex-col border-l border-border-subtle bg-bg-panel shadow-[-18px_0_40px_rgba(0,0,0,0.45)]"
+    >
+      <div
+        onMouseDown={onResizeStart}
+        className="absolute top-0 bottom-0 left-0 z-10 w-1 -translate-x-1/2 cursor-col-resize hover:bg-accent/35"
+      />
       <div className="flex h-8.5 flex-none items-center justify-between border-b border-[#17191D] pr-2 pl-3">
         <span className="text-[10.5px] font-semibold tracking-[0.12em] text-text-muted uppercase">
           Version history

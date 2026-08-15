@@ -11,6 +11,7 @@ import {
   setExplorerWidth,
   setPreviewWidth,
   setBottomPanelHeight,
+  setHistoryPanelWidth,
   toggleExplorer,
   togglePreview,
   toggleBottomPanel,
@@ -57,6 +58,13 @@ function clamp(value: number, min: number, max: number) {
 function trackDrag(startEvent: React.MouseEvent, axis: "x" | "y", onDelta: (delta: number) => void) {
   const startPos = axis === "x" ? startEvent.clientX : startEvent.clientY;
 
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.zIndex = "9999";
+  overlay.style.cursor = axis === "x" ? "col-resize" : "row-resize";
+  document.body.appendChild(overlay);
+
   function handleMouseMove(event: MouseEvent) {
     const pos = axis === "x" ? event.clientX : event.clientY;
     onDelta(pos - startPos);
@@ -64,6 +72,7 @@ function trackDrag(startEvent: React.MouseEvent, axis: "x" | "y", onDelta: (delt
   function handleMouseUp() {
     window.removeEventListener("mousemove", handleMouseMove);
     window.removeEventListener("mouseup", handleMouseUp);
+    overlay.remove();
   }
   window.addEventListener("mousemove", handleMouseMove);
   window.addEventListener("mouseup", handleMouseUp);
@@ -82,6 +91,7 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
   const previewWidth = useAppSelector((state) => state.ui.previewWidth);
   const bottomPanelOpen = useAppSelector((state) => state.ui.bottomPanelOpen);
   const bottomPanelHeight = useAppSelector((state) => state.ui.bottomPanelHeight);
+  const historyPanelWidth = useAppSelector((state) => state.ui.historyPanelWidth);
   const commandPaletteOpen = useAppSelector((state) => state.ui.commandPaletteOpen);
   const dirtyFileIds = useAppSelector((state) => state.editor.dirtyFileIds);
   const activeFileId = useAppSelector((state) => state.editor.activeFileId);
@@ -287,6 +297,11 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
     trackDrag(event, "y", (delta) => dispatch(setBottomPanelHeight(clamp(startHeight - delta, 120, 460))));
   }
 
+  function handleHistoryResizeStart(event: React.MouseEvent) {
+    const startWidth = historyPanelWidth;
+    trackDrag(event, "x", (delta) => dispatch(setHistoryPanelWidth(clamp(startWidth - delta, 260, 640))));
+  }
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-bg-base">
       <TopBar
@@ -359,7 +374,12 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
             onMouseDown={handleBottomResizeStart}
             className="h-1 flex-none cursor-row-resize hover:bg-accent/35"
           />
-          <BottomPanel open={bottomPanelOpen} height={bottomPanelHeight} onOpenAtLine={openPathAtLine} />
+          <BottomPanel
+            open={bottomPanelOpen}
+            height={bottomPanelHeight}
+            onOpenAtLine={openPathAtLine}
+            onToggleOpen={() => dispatch(toggleBottomPanel())}
+          />
         </div>
 
         <HistoryPanel
@@ -368,6 +388,8 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
           projectId={projectId}
           canMutate={canEdit}
           onRestored={handleFilesChanged}
+          width={historyPanelWidth}
+          onResizeStart={handleHistoryResizeStart}
         />
       </div>
 

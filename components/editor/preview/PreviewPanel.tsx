@@ -266,7 +266,7 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
         style={{ padding: frame.pad }}
       >
         <div
-          className="h-fit min-h-full overflow-hidden border border-border-subtle bg-white"
+          className="h-full overflow-hidden border border-border-subtle bg-white"
           style={{ width: frame.width, maxWidth: "100%", borderRadius: frame.radius }}
         >
           {doc && (

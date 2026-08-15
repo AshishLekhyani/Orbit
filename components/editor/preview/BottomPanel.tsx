@@ -24,9 +24,10 @@ interface BottomPanelProps {
   open: boolean;
   height: number;
   onOpenAtLine: (path: string, line: number) => void;
+  onToggleOpen: () => void;
 }
 
-export function BottomPanel({ open, height, onOpenAtLine }: BottomPanelProps) {
+export function BottomPanel({ open, height, onOpenAtLine, onToggleOpen }: BottomPanelProps) {
   const dispatch = useAppDispatch();
   const activeTab = useAppSelector((state) => state.preview.activeBottomTab);
   const problems = useAppSelector((state) => state.preview.problems);
@@ -112,6 +113,14 @@ export function BottomPanel({ open, height, onOpenAtLine }: BottomPanelProps) {
           className="px-2 text-[11px] text-text-muted hover:text-text-primary"
         >
           Clear
+        </button>
+        <button
+          onClick={onToggleOpen}
+          title={open ? "Collapse panel" : "Expand panel"}
+          aria-label={open ? "Collapse panel" : "Expand panel"}
+          className="px-1.5 text-ui text-text-tertiary hover:text-text-primary"
+        >
+          {open ? "⌄" : "⌃"}
         </button>
       </div>
 

@@ -14,6 +14,7 @@ interface UiState {
   explorerWidth: number;
   previewWidth: number;
   bottomPanelHeight: number;
+  historyPanelWidth: number;
   commandPaletteOpen: boolean;
   activeModal: ModalId;
   creatingFile: CreatingFileState | null;
@@ -26,6 +27,7 @@ const initialState: UiState = {
   explorerWidth: 236,
   previewWidth: 520,
   bottomPanelHeight: 184,
+  historyPanelWidth: 320,
   commandPaletteOpen: false,
   activeModal: null,
   creatingFile: null,
@@ -53,6 +55,9 @@ const uiSlice = createSlice({
     setBottomPanelHeight(state, action: PayloadAction<number>) {
       state.bottomPanelHeight = action.payload;
     },
+    setHistoryPanelWidth(state, action: PayloadAction<number>) {
+      state.historyPanelWidth = action.payload;
+    },
     setCommandPaletteOpen(state, action: PayloadAction<boolean>) {
       state.commandPaletteOpen = action.payload;
     },
@@ -72,6 +77,7 @@ export const {
   setExplorerWidth,
   setPreviewWidth,
   setBottomPanelHeight,
+  setHistoryPanelWidth,
   setCommandPaletteOpen,
   setActiveModal,
   setCreatingFile,

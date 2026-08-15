@@ -1,9 +1,12 @@
 "use client";
 
+import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ProjectSummary } from "@/store/api/projectsApi";
 import { useSetFavoriteMutation, useDeleteProjectMutation } from "@/store/api/projectsApi";
 import { useToast } from "@/components/shared/ToastProvider";
+import { Modal } from "@/components/shared/Modal";
+import { Button } from "@/components/shared/Button";
 
 function formatUpdatedAt(iso: string): string {
   const date = new Date(iso);
@@ -23,21 +26,27 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
   const router = useRouter();
   const { toast } = useToast();
   const [setFavorite] = useSetFavoriteMutation();
-  const [deleteProject] = useDeleteProjectMutation();
+  const [deleteProject, { isLoading: deleting }] = useDeleteProjectMutation();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  async function handleDelete(event: React.MouseEvent | React.KeyboardEvent) {
+  function openConfirm(event: React.MouseEvent | React.KeyboardEvent) {
     event.preventDefault();
     event.stopPropagation();
-    if (!window.confirm(`Delete "${project.name}"? This can't be undone.`)) return;
+    setConfirmOpen(true);
+  }
+
+  async function handleDelete() {
     try {
       await deleteProject(project.id).unwrap();
       toast("Deleted", project.name);
+      setConfirmOpen(false);
     } catch {
       toast("Couldn't delete project", undefined, "danger");
     }
   }
 
   return (
+    <Fragment>
     <button
       onClick={() => router.push(`/projects/${project.id}`)}
       className="group flex min-h-32 flex-col gap-1.5 rounded-md border border-[#1F2126] bg-[#131418] p-4 text-left hover:border-[#33363C] hover:bg-bg-raised"
@@ -49,9 +58,9 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
             <span
               role="button"
               tabIndex={0}
-              onClick={handleDelete}
+              onClick={openConfirm}
               onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") handleDelete(event);
+                if (event.key === "Enter" || event.key === " ") openConfirm(event);
               }}
               className="text-[11px] text-border-strong opacity-0 hover:text-danger-text group-hover:opacity-100"
               aria-label={`Delete ${project.name}`}
@@ -92,5 +101,27 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
         )}
       </div>
     </button>
+
+    <Modal
+      open={confirmOpen}
+      onClose={() => setConfirmOpen(false)}
+      title="Delete project"
+      maxWidthClassName="max-w-[420px]"
+    >
+      <div className="p-5">
+        <p className="text-body text-text-secondary">
+          Delete <span className="font-medium text-text-primary">“{project.name}”</span>? This can’t be undone.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setConfirmOpen(false)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+            {deleting ? "Deleting…" : "Delete"}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+    </Fragment>
   );
 }
