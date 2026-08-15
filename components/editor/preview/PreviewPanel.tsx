@@ -9,6 +9,7 @@ import {
   setActiveBottomTab,
   appendConsoleEntry,
   setProblems,
+  addProblems,
   startRun,
   setLoading,
   setError,
@@ -122,6 +123,23 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
     offsetsRef.current = result.offsets;
     setDoc({ html: result.html, offsets: result.offsets });
     setBuildId((id) => id + 1);
+
+    if (result.warnings.length > 0) {
+      dispatch(
+        setProblems(
+          result.warnings.map((warning, index) => ({
+            id: `ref-warning-${index}`,
+            severity: "warn",
+            file: "index.html",
+            line: warning.line,
+            text: warning.text,
+          })),
+        ),
+      );
+      for (const warning of result.warnings) {
+        dispatch(appendConsoleEntry({ id: `ref-warning-console-${warning.line}`, type: "warn", text: warning.text }));
+      }
+    }
   }, [dispatch]);
 
   useEffect(() => {
@@ -150,7 +168,7 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
         const loc = mapPreviewLine(offsetsRef.current, message.line);
         dispatch(setError({ text: message.text, file: loc.file, line: loc.line }));
         dispatch(
-          setProblems([{ id: `crash-${Date.now()}`, severity: "error", file: loc.file, line: loc.line, text: message.text }]),
+          addProblems([{ id: `crash-${Date.now()}`, severity: "error", file: loc.file, line: loc.line, text: message.text }]),
         );
         dispatch(setActiveBottomTab("problems"));
         return;

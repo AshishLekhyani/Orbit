@@ -38,12 +38,10 @@ export function makeStore() {
     },
     preloadedState: { settings: readPersistedSettings() },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(
-        projectsApi.middleware,
-        filesApi.middleware,
-        sharingApi.middleware,
-        versionsApi.middleware,
-      ),
+      getDefaultMiddleware({
+        immutableCheck: { ignoredPaths: ["editor.liveContent"] },
+        serializableCheck: { ignoredPaths: ["editor.liveContent"] },
+      }).concat(projectsApi.middleware, filesApi.middleware, sharingApi.middleware, versionsApi.middleware),
   });
 }
 

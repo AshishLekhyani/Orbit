@@ -77,6 +77,9 @@ const previewSlice = createSlice({
     setProblems(state, action: PayloadAction<ProblemEntry[]>) {
       state.problems = action.payload;
     },
+    addProblems(state, action: PayloadAction<ProblemEntry[]>) {
+      state.problems.push(...action.payload);
+    },
     clearConsole(state) {
       state.console = [];
     },
@@ -103,6 +106,7 @@ export const {
   setActiveBottomTab,
   appendConsoleEntry,
   setProblems,
+  addProblems,
   clearConsole,
   startRun,
   appendOutput,

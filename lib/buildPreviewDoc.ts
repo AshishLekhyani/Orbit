@@ -9,8 +9,13 @@ export interface PreviewLineOffset {
   end: number;
 }
 
+export interface PreviewWarning {
+  text: string;
+  line: number;
+}
+
 export type PreviewBuildResult =
-  | { ok: true; html: string; offsets: PreviewLineOffset[] }
+  | { ok: true; html: string; offsets: PreviewLineOffset[]; warnings: PreviewWarning[] }
   | { ok: false; error: string };
 
 const CAPTURE_SCRIPT = `<script>
@@ -47,24 +52,56 @@ const CAPTURE_SCRIPT = `<script>
 })();
 </script>`;
 
+function normalizePath(path: string): string {
+  return path.replace(/^(\.\/|\/)+/, "");
+}
+
+function isExternalUrl(src: string): boolean {
+  const isProtocolRelative = src.charAt(0) === "/" && src.charAt(1) === "/";
+  return src.startsWith("http://") || src.startsWith("https://") || isProtocolRelative || src.startsWith("data:");
+}
+
+function lineAt(text: string, matchedSnippet: string): number {
+  const index = text.indexOf(matchedSnippet);
+  return index === -1 ? 1 : text.slice(0, index).split("\n").length;
+}
+
 export function buildPreviewDoc(files: PreviewSourceFile[]): PreviewBuildResult {
-  const byPath = new Map(files.map((file) => [file.path, file.content]));
+  const byPath = new Map<string, string>();
+  for (const file of files) {
+    byPath.set(file.path, file.content);
+    byPath.set(normalizePath(file.path), file.content);
+  }
   const entry = byPath.get("index.html");
 
   if (entry === undefined) {
     return { ok: false, error: "No index.html found in this project." };
   }
 
+  const warnings: PreviewWarning[] = [];
+
   let html = entry.replace(/<link[^>]*href="([^"]+\.css)"[^>]*>/g, (match, href: string) => {
-    const css = byPath.get(href);
-    return css === undefined ? match : `<style>\n${css}\n</style>`;
+    const css = byPath.get(href) ?? byPath.get(normalizePath(href));
+    if (css === undefined) {
+      if (!isExternalUrl(href)) {
+        warnings.push({ text: `Referenced stylesheet "${href}" was not found in this project.`, line: lineAt(entry, match) });
+      }
+      return match;
+    }
+    return `<style>\n${css}\n</style>`;
   });
 
   html = html.replace(
     /<script([^>]*)\ssrc="([^"]+\.js)"([^>]*)>\s*<\/script>/g,
     (match, _before: string, src: string) => {
-      const js = byPath.get(src);
-      return js === undefined ? match : `<script data-f="${src}">\n${js}\n</script>`;
+      const js = byPath.get(src) ?? byPath.get(normalizePath(src));
+      if (js === undefined) {
+        if (!isExternalUrl(src)) {
+          warnings.push({ text: `Referenced script "${src}" was not found in this project.`, line: lineAt(entry, match) });
+        }
+        return match;
+      }
+      return `<script data-f="${src}">\n${js}\n</script>`;
     },
   );
 
@@ -83,7 +120,7 @@ export function buildPreviewDoc(files: PreviewSourceFile[]): PreviewBuildResult 
     }
   });
 
-  return { ok: true, html, offsets };
+  return { ok: true, html, offsets, warnings };
 }
 
 export function mapPreviewLine(
