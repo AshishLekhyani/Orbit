@@ -60,6 +60,15 @@ export function MonacoEditor({
   const safetyInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasPendingChange = useRef(false);
   const supabaseRef = useRef(createClient());
+  const autoSaveRef = useRef(settings.autoSave);
+  useEffect(() => {
+    autoSaveRef.current = settings.autoSave;
+  }, [settings.autoSave]);
+  const showCursorsRef = useRef(settings.showCollaboratorCursors);
+  useEffect(() => {
+    showCursorsRef.current = settings.showCollaboratorCursors;
+    if (awarenessRef.current) syncAwarenessStyles(awarenessRef.current, showCursorsRef.current);
+  }, [settings.showCollaboratorCursors]);
 
   const flushSnapshot = useCallback(() => {
     const doc = docRef.current;
@@ -123,22 +132,28 @@ export function MonacoEditor({
         hasPendingChange.current = true;
         dispatch(markDirty(fileId));
         if (saveTimer.current) clearTimeout(saveTimer.current);
-        saveTimer.current = setTimeout(flushSnapshot, SAVE_DEBOUNCE_MS);
+        if (autoSaveRef.current) {
+          saveTimer.current = setTimeout(flushSnapshot, SAVE_DEBOUNCE_MS);
+        } else {
+          dispatch(setSaveState("unsaved"));
+        }
       });
 
-      awareness.on("change", () => syncAwarenessStyles(awareness!));
+      awareness.on("change", () => syncAwarenessStyles(awareness!, showCursorsRef.current));
 
       setReady(true);
     });
 
-    safetyInterval.current = setInterval(flushIfDirty, SAFETY_INTERVAL_MS);
+    safetyInterval.current = setInterval(() => {
+      if (autoSaveRef.current) flushIfDirty();
+    }, SAFETY_INTERVAL_MS);
 
     return () => {
       cancelled = true;
       setReady(false);
       if (saveTimer.current) clearTimeout(saveTimer.current);
       if (safetyInterval.current) clearInterval(safetyInterval.current);
-      flushIfDirty();
+      if (autoSaveRef.current) flushIfDirty();
       bindingRef.current?.destroy();
       bindingRef.current = null;
       provider?.destroy();
@@ -207,7 +222,9 @@ export function MonacoEditor({
       dispatch(setCursor({ line: event.position.lineNumber, column: event.position.column }));
     });
 
-    editorInstance.onDidBlurEditorWidget(() => flushIfDirty());
+    editorInstance.onDidBlurEditorWidget(() => {
+      if (autoSaveRef.current) flushIfDirty();
+    });
 
     if (pendingLine) {
       editorInstance.revealLineInCenter(pendingLine);
@@ -232,6 +249,7 @@ export function MonacoEditor({
         fontFamily: "var(--font-mono)",
         fontSize: settings.fontSize,
         tabSize: settings.tabSize,
+        detectIndentation: false,
         wordWrap: settings.wordWrap ? "on" : "off",
         minimap: { enabled: settings.minimap },
         lineNumbers: settings.lineNumbers ? "on" : "off",

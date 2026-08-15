@@ -10,7 +10,7 @@ interface CursorPosition {
   column: number;
 }
 
-export type SaveState = "idle" | "saving" | "saved" | "error";
+export type SaveState = "idle" | "saving" | "saved" | "unsaved" | "error";
 
 interface EditorState {
   openTabs: OpenTab[];

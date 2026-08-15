@@ -16,15 +16,13 @@ const CATEGORIES: Category[] = [
   "Security",
 ];
 
-const AVAILABLE: Category[] = ["General", "Editor", "Appearance", "Keyboard Shortcuts"];
-
 const DESCRIPTIONS: Record<Category, string> = {
   General: "Workspace defaults for new projects.",
   Editor: "How code looks and behaves while you type.",
   Appearance: "Theme and interface density.",
   "Keyboard Shortcuts": "Every shortcut Orbit listens for.",
-  Collaboration: "Presence, cursors, and session limits - coming with real-time collaboration.",
-  Security: "Access, sessions, and sharing defaults - coming with project sharing.",
+  Collaboration: "Presence and cursors while you're editing with others.",
+  Security: "Access is role-based today. Two-factor auth and multi-device session management aren't built yet.",
 };
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
@@ -121,7 +119,15 @@ const THEMES: { id: EditorTheme; name: string; available: boolean }[] = [
   { id: "light", name: "Light", available: false },
 ];
 
-export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function SettingsModal({
+  open,
+  onClose,
+  userLabel,
+}: {
+  open: boolean;
+  onClose: () => void;
+  userLabel?: string;
+}) {
   const [category, setCategory] = useState<Category>("Editor");
 
   return (
@@ -129,47 +135,49 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
       <div className="flex h-120 max-h-[88vh]">
         <div className="w-46 flex-none border-r border-[#22242A] bg-bg-editor px-2.5 py-4">
           <div className="px-2 pb-3.5 text-[13.5px] font-semibold text-text-primary">Settings</div>
-          {CATEGORIES.map((cat) => {
-            const available = AVAILABLE.includes(cat);
-            return (
-              <button
-                key={cat}
-                disabled={!available}
-                onClick={() => setCategory(cat)}
-                className={`mb-0.5 flex w-full items-center justify-between rounded-sm px-2.25 py-1.75 text-left text-ui ${
-                  !available
-                    ? "cursor-not-allowed text-text-faint"
-                    : category === cat
-                      ? "bg-[#1A1C20] text-text-primary"
-                      : "text-text-secondary hover:bg-[#17191D]"
-                }`}
-              >
-                {cat}
-                {!available && <span className="text-[9.5px] text-text-faint">Soon</span>}
-              </button>
-            );
-          })}
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`mb-0.5 w-full rounded-sm px-2.25 py-1.75 text-left text-ui ${
+                category === cat ? "bg-[#1A1C20] text-text-primary" : "text-text-secondary hover:bg-[#17191D]"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
         <div className="flex-1 overflow-auto px-6 py-5.5">
           <div className="mb-1 text-[13.5px] font-semibold text-text-primary">{category}</div>
           <div className="mb-5 text-[12px] text-text-muted">{DESCRIPTIONS[category]}</div>
 
-          {category === "General" && <GeneralSettings />}
+          {category === "General" && <GeneralSettings userLabel={userLabel} />}
           {category === "Editor" && <EditorSettings />}
           {category === "Appearance" && <AppearanceSettings />}
           {category === "Keyboard Shortcuts" && <KeyboardShortcutsSettings />}
+          {category === "Collaboration" && <CollaborationSettings />}
+          {category === "Security" && <SecuritySettings />}
         </div>
       </div>
     </Modal>
   );
 }
 
-function GeneralSettings() {
+function GeneralSettings({ userLabel }: { userLabel?: string }) {
+  const dispatch = useAppDispatch();
+  const reopenLastProject = useAppSelector((state) => state.settings.reopenLastProject);
+
   return (
     <>
-      <KeyRow label="Workspace" description="Personal workspace" value="Personal" />
+      <KeyRow label="Workspace" description="Personal workspace" value={userLabel ?? "—"} />
       <KeyRow label="Default stack" description="Applied to new projects" value="HTML / CSS / JS" />
+      <SettingRow label="Reopen last project" description="Jump straight into the editor on sign in">
+        <Toggle
+          checked={reopenLastProject}
+          onChange={(value) => dispatch(setSettings({ reopenLastProject: value }))}
+        />
+      </SettingRow>
     </>
   );
 }
@@ -231,12 +239,43 @@ function KeyboardShortcutsSettings() {
     <>
       <KeyRow label="New File" description="Create a file in the active folder" value="⌘N" />
       <KeyRow label="Command Palette" description="Every command in the product" value="⌘K" />
+      <KeyRow label="Run" description="Rebuild the live preview" value="⌘↵" />
       <KeyRow label="Find in File" description="Search within the open file" value="⌘F" />
       <KeyRow label="Search in Files" description="Search across every file in the project" value="⇧⌘F" />
       <KeyRow label="Go to Line" description="Jump to a specific line number" value="⌃G" />
       <KeyRow label="Save" description="Force an immediate save" value="⌘S" />
       <KeyRow label="Toggle Sidebar" description="Collapse the explorer" value="⌘B" />
+      <KeyRow label="Toggle Preview" description="Show or hide the preview panel" value="⇧⌘P" />
+      <KeyRow label="Version History" description="Open the version history panel" value="⇧⌘H" />
+      <KeyRow label="Share" description="Open the share panel (owners only)" value="⇧⌘S" />
       <KeyRow label="Open Settings" description="Open this panel" value="⌘," />
+    </>
+  );
+}
+
+function CollaborationSettings() {
+  const dispatch = useAppDispatch();
+  const showCollaboratorCursors = useAppSelector((state) => state.settings.showCollaboratorCursors);
+
+  return (
+    <>
+      <SettingRow label="Show collaborator cursors" description="Render live cursors and selections inline">
+        <Toggle
+          checked={showCollaboratorCursors}
+          onChange={(value) => dispatch(setSettings({ showCollaboratorCursors: value }))}
+        />
+      </SettingRow>
+      <KeyRow label="Presence" description="Who can see you're in a project" value="Anyone with access" />
+    </>
+  );
+}
+
+function SecuritySettings() {
+  return (
+    <>
+      <KeyRow label="Access control" description="Enforced per project" value="Owner / Editor / Viewer" />
+      <KeyRow label="Two-factor authentication" description="Not built yet" value="Unavailable" />
+      <KeyRow label="Multi-device sessions" description="Not built yet" value="Unavailable" />
     </>
   );
 }

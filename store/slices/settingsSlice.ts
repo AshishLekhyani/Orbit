@@ -11,6 +11,7 @@ interface SettingsState {
   autoSave: boolean;
   theme: EditorTheme;
   showCollaboratorCursors: boolean;
+  reopenLastProject: boolean;
 }
 
 export const initialSettingsState: SettingsState = {
@@ -22,6 +23,7 @@ export const initialSettingsState: SettingsState = {
   autoSave: true,
   theme: "dark",
   showCollaboratorCursors: true,
+  reopenLastProject: false,
 };
 
 const settingsSlice = createSlice({

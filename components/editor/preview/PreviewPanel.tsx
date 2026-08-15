@@ -95,6 +95,7 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
   const liveContent = useAppSelector((state) => state.editor.liveContent);
 
   const [doc, setDoc] = useState<{ html: string; offsets: PreviewLineOffset[] } | null>(null);
+  const [buildId, setBuildId] = useState(0);
   const offsetsRef = useRef<PreviewLineOffset[]>([]);
   const mergedFilesRef = useRef<{ path: string; content: string }[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -120,6 +121,7 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
     }
     offsetsRef.current = result.offsets;
     setDoc({ html: result.html, offsets: result.offsets });
+    setBuildId((id) => id + 1);
   }, [dispatch]);
 
   useEffect(() => {
@@ -251,6 +253,7 @@ export function PreviewPanel({ projectId, projectName, runToken, onOpenAtLine }:
         >
           {doc && (
             <iframe
+              key={buildId}
               ref={iframeRef}
               title="Preview"
               sandbox="allow-scripts allow-modals"

@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { StoreProvider } from "@/store/StoreProvider";
+import { ToastProvider } from "@/components/shared/ToastProvider";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setCommandPaletteOpen } from "@/store/slices/uiSlice";
+import { readLastProject } from "@/lib/lastProject";
 import { DashboardHeader } from "./DashboardHeader";
 import { ProjectCard } from "./ProjectCard";
 import { CreateProjectModal, type Template } from "./CreateProjectModal";
@@ -40,7 +43,9 @@ interface DashboardShellProps {
 export function DashboardShell(props: DashboardShellProps) {
   return (
     <StoreProvider>
-      <DashboardContent {...props} />
+      <ToastProvider>
+        <DashboardContent {...props} />
+      </ToastProvider>
     </StoreProvider>
   );
 }
@@ -62,6 +67,8 @@ function firstNameFrom(displayName: string | null, email: string): string | null
 
 function DashboardContent({ email, displayName, onSignOut }: DashboardShellProps) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
+  const reopenLastProject = useAppSelector((state) => state.settings.reopenLastProject);
   const commandPaletteOpen = useAppSelector((state) => state.ui.commandPaletteOpen);
   const [nav, setNav] = useState<NavFilter>("all");
   const [search, setSearch] = useState("");
@@ -73,6 +80,16 @@ function DashboardContent({ email, displayName, onSignOut }: DashboardShellProps
   const greeting = name ? `${greetingPrefix}, ${name}.` : `${greetingPrefix}.`;
 
   const { data: projects, isLoading } = useGetProjectsQuery(nav === "shared" ? "shared" : undefined);
+
+  useEffect(() => {
+    if (!reopenLastProject || isLoading || !projects) return;
+    if (sessionStorage.getItem("orbit-reopen-redirected")) return;
+    sessionStorage.setItem("orbit-reopen-redirected", "1");
+    const lastProjectId = readLastProject();
+    if (lastProjectId && projects.some((project) => project.id === lastProjectId)) {
+      router.replace(`/projects/${lastProjectId}`);
+    }
+  }, [reopenLastProject, isLoading, projects, router]);
 
   const filtered = (projects ?? [])
     .filter((project) => (nav === "favorites" ? project.isFavorite : true))
@@ -108,6 +125,7 @@ function DashboardContent({ email, displayName, onSignOut }: DashboardShellProps
     <div className="flex min-h-screen flex-col">
       <DashboardHeader
         email={email}
+        displayName={displayName}
         search={search}
         onSearchChange={setSearch}
         onSignOut={onSignOut}

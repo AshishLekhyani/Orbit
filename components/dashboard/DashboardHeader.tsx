@@ -6,6 +6,7 @@ import { SettingsModal } from "@/components/shared/SettingsModal";
 
 interface DashboardHeaderProps {
   email: string;
+  displayName: string | null;
   search: string;
   onSearchChange: (value: string) => void;
   onSignOut: () => void;
@@ -22,6 +23,7 @@ function getInitials(email: string): string {
 
 export function DashboardHeader({
   email,
+  displayName,
   search,
   onSearchChange,
   onSignOut,
@@ -107,7 +109,11 @@ export function DashboardHeader({
         </div>
       </div>
 
-      <SettingsModal open={settingsOpen} onClose={() => onSettingsOpenChange(false)} />
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => onSettingsOpenChange(false)}
+        userLabel={displayName?.trim() || email}
+      />
     </header>
   );
 }

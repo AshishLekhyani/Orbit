@@ -4,11 +4,23 @@ import editorReducer from "./slices/editorSlice";
 import projectReducer from "./slices/projectSlice";
 import previewReducer from "./slices/previewSlice";
 import collaborationReducer from "./slices/collaborationSlice";
-import settingsReducer from "./slices/settingsSlice";
+import settingsReducer, { initialSettingsState } from "./slices/settingsSlice";
 import { projectsApi } from "./api/projectsApi";
 import { filesApi } from "./api/filesApi";
 import { sharingApi } from "./api/sharingApi";
 import { versionsApi } from "./api/versionsApi";
+
+const SETTINGS_STORAGE_KEY = "orbit-settings";
+
+function readPersistedSettings() {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    return raw ? { ...initialSettingsState, ...JSON.parse(raw) } : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export function makeStore() {
   return configureStore({
@@ -24,6 +36,7 @@ export function makeStore() {
       [sharingApi.reducerPath]: sharingApi.reducer,
       [versionsApi.reducerPath]: versionsApi.reducer,
     },
+    preloadedState: { settings: readPersistedSettings() },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(
         projectsApi.middleware,

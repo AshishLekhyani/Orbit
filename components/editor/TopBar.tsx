@@ -13,6 +13,7 @@ const SAVE_LABEL: Record<string, { text: string; color: string }> = {
   idle: { text: "Saved", color: "var(--color-ok)" },
   saved: { text: "Saved", color: "var(--color-ok)" },
   saving: { text: "Saving…", color: "var(--color-warn)" },
+  unsaved: { text: "Unsaved — ⌘S to save", color: "var(--color-warn)" },
   error: { text: "Save failed", color: "var(--color-danger)" },
 };
 
@@ -24,6 +25,7 @@ interface TopBarProps {
   canShare: boolean;
   onOpenShare: () => void;
   onOpenHistory: () => void;
+  userLabel: string;
 }
 
 export function TopBar({
@@ -34,6 +36,7 @@ export function TopBar({
   canShare,
   onOpenShare,
   onOpenHistory,
+  userLabel,
 }: TopBarProps) {
   const saveState = useAppSelector((state) => state.editor.saveState);
   const followingUserId = useAppSelector((state) => state.collaboration.followingUserId);
@@ -161,7 +164,7 @@ export function TopBar({
         )}
       </div>
 
-      <SettingsModal open={settingsOpen} onClose={() => onSettingsOpenChange(false)} />
+      <SettingsModal open={settingsOpen} onClose={() => onSettingsOpenChange(false)} userLabel={userLabel} />
     </header>
   );
 }

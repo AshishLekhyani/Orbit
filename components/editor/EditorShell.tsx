@@ -21,6 +21,7 @@ import { openTab, setSearchOpen } from "@/store/slices/editorSlice";
 import { setCollaborators, setConnectionState, type ConnectionState } from "@/store/slices/collaborationSlice";
 import { useGetFilesQuery, filesApi } from "@/store/api/filesApi";
 import { createClient } from "@/lib/supabase/client";
+import { recordLastProject } from "@/lib/lastProject";
 import { ProjectPresenceChannel } from "@/lib/realtime/ProjectPresenceChannel";
 import type { LocalUser } from "@/lib/realtime/SupabaseYjsProvider";
 import { TopBar } from "./TopBar";
@@ -96,6 +97,10 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
   const editorInstanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const supabaseRef = useRef(createClient());
   const presenceRef = useRef<ProjectPresenceChannel | null>(null);
+
+  useEffect(() => {
+    recordLastProject(projectId);
+  }, [projectId]);
 
   const handleMembershipChanged = useCallback(
     async (changedUserId: string) => {
@@ -292,6 +297,7 @@ function EditorShellInner({ projectId, projectName, role: initialRole, currentUs
         canShare={role === "OWNER"}
         onOpenShare={() => setShareOpen(true)}
         onOpenHistory={() => setHistoryOpen((value) => !value)}
+        userLabel={currentUser.name}
       />
 
       <div className="relative flex min-h-0 flex-1">

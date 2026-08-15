@@ -6,12 +6,17 @@ function escapeCss(value: string): string {
   return value.replace(/["\\]/g, "\\$&");
 }
 
-export function syncAwarenessStyles(awareness: Awareness) {
+export function syncAwarenessStyles(awareness: Awareness, visible: boolean = true) {
   let styleEl = document.getElementById(STYLE_ELEMENT_ID) as HTMLStyleElement | null;
   if (!styleEl) {
     styleEl = document.createElement("style");
     styleEl.id = STYLE_ELEMENT_ID;
     document.head.appendChild(styleEl);
+  }
+
+  if (!visible) {
+    styleEl.textContent = "";
+    return;
   }
 
   const rules: string[] = [];
