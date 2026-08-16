@@ -2,7 +2,16 @@
 
 A browser-based collaborative development environment: open a project, edit HTML/CSS/JS with Monaco, see a live sandboxed preview, and collaborate with others in real time — no local setup required.
 
-> **Status:** feature-complete for v1, in production hardening (polish, performance, accessibility, security, deployment — see Roadmap below).
+## Features
+
+- **Dashboard** — search, favorite, and filter your projects ("All" / "Shared with me" / "Favorites"), create from a blank or landing-page template, delete with confirmation.
+- **Editor** — Monaco-powered file editor with a resizable file tree, tabbed files, find-in-file, project-wide search, go-to-line, and a command palette (⌘K) for every action.
+- **Live preview** — HTML/CSS/JS files are bundled into a sandboxed `<iframe>` and re-run on save (or on demand), with console/problems/output panels wired to real `console.*` calls and runtime errors from the preview.
+- **Real-time collaboration** — multiple people editing the same file see each other's cursors, selections, and live edits via a CRDT (Yjs), with connection-state indicators and presence.
+- **Sharing** — invite collaborators as Owner/Editor/Viewer, or generate a share link with a chosen permission level; every mutating action re-checks the caller's role server-side.
+- **Version history** — save named checkpoints, diff any two versions per file, and restore non-destructively (a restore is recorded as a new version, so history only ever grows forward).
+- **Settings** — editor behavior (font size, tab size, word wrap, minimap, line numbers, autosave), appearance, collaboration (cursor visibility), and a documented list of every keyboard shortcut — all backed by real, working controls, persisted across sessions.
+- **Auth** — passwordless sign-in via emailed magic link or a typed one-time code, no passwords stored.
 
 ## Architecture
 
@@ -24,7 +33,7 @@ A browser-based collaborative development environment: open a project, edit HTML
 
 - **Next.js (App Router)** serves the marketing site, auth flow, dashboard, and editor, and hosts all API routes.
 - **Supabase Postgres + Prisma** stores projects, files, membership/roles, share links, and version snapshots.
-- **Supabase Auth** handles sign-in (email magic link) and session cookies.
+- **Supabase Auth** handles sign-in (email magic link and one-time code) and session cookies.
 - **Supabase Realtime** carries live collaboration traffic (Yjs updates, cursor/selection awareness, and presence) over Broadcast/Presence channels — there is no custom WebSocket server.
 - **Yjs** owns collaborative document state (CRDT). Redux never holds live document text.
 
@@ -45,9 +54,10 @@ Each open file gets one Supabase Realtime channel. Local Yjs updates are broadca
 | Collaboration CRDT | Yjs (`y-monaco`, `y-indexeddb`, `y-protocols/awareness`) |
 | Database | PostgreSQL (Supabase) |
 | ORM | Prisma |
-| Auth | Supabase Auth (email magic link) |
+| Auth | Supabase Auth (email magic link + one-time code) |
 | Realtime transport | Supabase Realtime (Broadcast + Presence) |
-| Testing | Vitest |
+| Unit/integration testing | Vitest |
+| End-to-end testing | Playwright |
 | Deployment | Vercel |
 
 ## Local setup
@@ -85,9 +95,10 @@ npx prisma migrate deploy                       # CI/production
 
 Prisma uses `DIRECT_URL` (unpooled) for migrations and `DATABASE_URL` (Supavisor-pooled) for runtime queries — see `prisma/schema.prisma`. `npm install` runs `prisma generate` automatically via a `postinstall` script, so this doesn't need a separate manual step — including on Vercel, where the platform runs `npm install` before `npm run build`.
 
-Migrations are the only source of truth for schema, RLS, and Realtime Authorization — a fresh Supabase project needs nothing beyond `npx prisma migrate deploy` to reach the same state as production. Two migrations are worth calling out specifically since they're easy to assume are dashboard-only configuration:
+Migrations are the only source of truth for schema, RLS, and Realtime Authorization — a fresh Supabase project needs nothing beyond `npx prisma migrate deploy` to reach the same state as production. A few are worth calling out specifically since they're easy to assume are dashboard-only configuration:
 - `20260812163153_enable_rls` enables Postgres RLS on every application table (`profiles`, `projects`, `project_members`, `files`, `project_versions`, `version_file_snapshots`, `share_links`) with **zero policies**. This is intentional: Prisma's `DATABASE_URL`/`DIRECT_URL` connections go straight to Postgres and are unaffected by RLS, but it means the public `anon` key can never read or write these tables through Supabase's auto-exposed PostgREST API — all authorization instead happens in application code (every mutating API route re-checks role server-side).
 - `20260813092633_realtime_authorization` and `20260813094843_realtime_authorization_project_presence` set up Realtime Authorization (private-channel RLS on `realtime.messages`, via a `SECURITY DEFINER` function) so only users with actual project access can subscribe to a project's or file's live-collaboration channel. On a freshly-provisioned Supabase project, the very first channel subscribe attempt right after migrating can transiently `CHANNEL_ERROR` even for an authorized user — this is Realtime's tenant eventual-consistency picking up the new policies, not a bug; it resolves within seconds.
+- `20260814143404_fix_rls_gaps` and `20260814143520_revoke_anon_realtime_auth_fn` close two gaps found after the fact (RLS missing on `project_favorites`/`_prisma_migrations`, and PUBLIC/anon `EXECUTE` left grantable on the Realtime authorization function). New tables or `SECURITY DEFINER` functions should be checked against Supabase's Security Advisor after every schema change — RLS coverage doesn't extend to new objects automatically.
 
 ### Connection pooling
 
@@ -100,6 +111,22 @@ npm run test
 ```
 
 Vitest covers permission checks, file-path handling, and other logic that's cheap to get wrong and expensive to get wrong silently — not UI snapshots.
+
+### End-to-end
+
+```bash
+node --env-file=.env scripts/e2e-full-flow.mjs
+```
+
+A full Playwright suite that drives a real browser through the entire product — signup, dashboard, file CRUD, Monaco editing, live preview, sharing/permissions, real-time sync between two sessions, disconnect/reconnect, version history, and share-link lifecycle. It runs against whatever `DATABASE_URL`/Supabase project is in `.env`, so point it at a disposable/dev project, not production.
+
+Every test user and project it creates is prefixed so it can be cleaned up afterward — always run this when a suite is interrupted (`Ctrl+C`, a crash) or after any manual E2E script, since interrupted runs skip their own cleanup:
+
+```bash
+node --env-file=.env scripts/cleanup-e2e-leftovers.mjs
+```
+
+The suite never sends real email — it uses the Supabase Admin API (`generateLink`/`createUser`) to establish sessions directly, with one deliberately network-intercepted exception to still exercise the typed-OTP UI path without a real send.
 
 ## Deployment
 
@@ -121,9 +148,3 @@ After deploying, re-run the real-Orbit-operation benchmarks (the same ones used 
 - The live preview runs in a sandboxed iframe (`sandbox="allow-scripts allow-modals"`, deliberately without `allow-same-origin`) so user-authored code can never reach the parent app's session or cookies.
 - `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, and `DIRECT_URL` are server-only environment variables and are never referenced from client-bundled code.
 - Share links use a random, unguessable token and are validated (and checked for expiry/revocation) server-side on every access.
-
-## Roadmap
-
-Tracked as phases: foundation → marketing + auth → dashboard → editor shell → live preview → real-time collaboration → sharing → version history → **polish, performance & production readiness (current)**. See project history for detailed progress within the current phase.
-
-Deliberately out of scope for v1: Git/GitHub integration, an AI assistant, an in-browser terminal, npm/package installation, and arbitrary server-side code execution. These are all being considered only after v1 is deployed and stable.
