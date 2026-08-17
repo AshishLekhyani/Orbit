@@ -77,7 +77,7 @@ npm run dev
 1. Create a free project at [supabase.com](https://supabase.com).
 2. **Settings → API**: copy the Project URL and `anon public` key into `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Copy the `service_role` key into `SUPABASE_SERVICE_ROLE_KEY` (server-only — never sent to the browser).
 3. **Settings → Database**: copy the pooled connection string (port 6543, "Transaction" mode) into `DATABASE_URL`, and the direct connection string (port 5432) into `DIRECT_URL`.
-4. **Authentication → URL Configuration**: set the Site URL to `http://localhost:3000` in development (and your deployed URL, e.g. `https://your-app.vercel.app`, in production), and add both as redirect URLs — the magic-link/OTP email links back through `NEXT_PUBLIC_APP_URL`, so it must match whatever the app is actually served from in each environment.
+4. **Authentication → URL Configuration**: set the Site URL to `http://localhost:3000` in development (and your deployed URL, e.g. `https://your-app.vercel.app`, in production), and add both as redirect URLs. The app computes its own redirect target at runtime from `window.location.origin`, but Supabase only honors redirects that appear in this allowlist — so the deployed URL must be added here or sign-in will fail after redirect.
 5. **Authentication → Email Templates**: replace the default "Magic Link" and "Confirm signup" templates with `supabase/email-templates/magic-link.html` and `supabase/email-templates/confirm-signup.html`. Both templates are needed — `signInWithOtp()` routes new/unconfirmed emails through "Confirm signup" and returning users through "Magic Link". Supabase email templates are project-level dashboard configuration with no source of truth in application code, so this step must be repeated on every new Supabase project (including a disaster-recovery recreation).
 
 ### Environment variables
@@ -135,10 +135,9 @@ Target: **Vercel + Supabase**, no other infrastructure — no always-on custom s
 1. **Supabase project**: follow "Supabase project" above against a real (not free-tier-throwaway) project. Run `npx prisma migrate deploy` against it — this alone brings schema, RLS, and Realtime Authorization to production-ready state.
 2. **Vercel project**: connect the Git repository. Framework preset: Next.js (auto-detected). No custom build command is required — `npm install` (which also runs `prisma generate`) followed by `npm run build` is Vercel's default and is sufficient.
 3. **Environment variables**: set every variable from `.env.example` in the Vercel project's Environment Variables settings, scoped to Production (and Preview/Development if those environments point at their own Supabase projects). Use the real Mumbai project's values — `DATABASE_URL`/`DIRECT_URL` must keep `connection_limit=5&pool_timeout=15` (see "Connection pooling" above).
-4. **`NEXT_PUBLIC_APP_URL`**: set to the real production URL (e.g. `https://orbit.vercel.app` or a custom domain) — this is what magic-link/OTP emails link back to.
-5. **Supabase Auth → URL Configuration**: set Site URL and add a redirect URL for the production `NEXT_PUBLIC_APP_URL`, same as the local setup step but for the deployed domain.
-6. **Supabase Auth → Email Templates**: paste in `supabase/email-templates/magic-link.html` and `confirm-signup.html` (dashboard-only config, not deployed by Vercel).
-7. Push/deploy. There is no separate realtime server, worker, or cron process to stand up — Supabase Realtime, Auth, and Postgres are all fully managed.
+4. **Supabase Auth → URL Configuration**: once you know the deployed URL (Vercel assigns one on first deploy, or use your custom domain), set it as the Site URL and add it as a redirect URL. Sign-in will fail after redirect until this is done.
+5. **Supabase Auth → Email Templates**: paste in `supabase/email-templates/magic-link.html` and `confirm-signup.html` (dashboard-only config, not deployed by Vercel).
+6. Push/deploy. There is no separate realtime server, worker, or cron process to stand up — Supabase Realtime, Auth, and Postgres are all fully managed.
 
 After deploying, re-run the real-Orbit-operation benchmarks (the same ones used for the Sydney→Mumbai comparison) against the live production URL and compare against the Mumbai local-dev baseline before treating any latency numbers as representative of production — local dev and a Vercel edge/region deployment do not necessarily have identical network paths to Supabase.
 
