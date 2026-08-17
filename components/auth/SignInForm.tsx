@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { safeRedirectPath } from "@/lib/safeRedirect";
 import { Button } from "@/components/shared/Button";
 
 type Status = "idle" | "sending" | "sent" | "error";
@@ -10,6 +11,8 @@ type CodeStatus = "idle" | "verifying" | "error";
 
 export function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const destination = safeRedirectPath(searchParams.get("redirect"));
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -38,7 +41,7 @@ export function SignInForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
       },
     });
 
@@ -69,8 +72,17 @@ export function SignInForm() {
       return;
     }
 
-    await fetch("/api/auth/ensure-profile", { method: "POST" }).catch(() => {});
-    router.push("/dashboard");
+    const profileReady = await fetch("/api/auth/ensure-profile", { method: "POST" })
+      .then((response) => response.ok)
+      .catch(() => false);
+
+    if (!profileReady) {
+      setCodeStatus("error");
+      setCodeError("Signed in, but your account setup didn't finish. Check your connection and try again.");
+      return;
+    }
+
+    router.push(destination);
   }
 
   if (status === "sent") {

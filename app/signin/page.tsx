@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { OrbitLogo } from "@/components/shared/OrbitLogo";
 import { SignInForm } from "@/components/auth/SignInForm";
 
@@ -18,7 +19,9 @@ export default function SignInPage() {
         </h1>
         <p className="mb-[26px] text-[13.5px] text-text-secondary">Continue to your workspace.</p>
 
-        <SignInForm />
+        <Suspense fallback={<div className="h-30.5" />}>
+          <SignInForm />
+        </Suspense>
 
         <p className="mt-[26px] text-[11.5px] leading-[1.6] text-text-muted">
           By continuing you agree to the Terms of Service and Privacy Policy.
