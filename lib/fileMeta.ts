@@ -36,6 +36,15 @@ export function monacoLanguageFor(type: string): string {
   }
 }
 
+export const MAX_FILE_NAME_LENGTH = 255;
+
+export function isValidFileName(name: string): boolean {
+  if (!name || name.length > MAX_FILE_NAME_LENGTH) return false;
+  if (name.includes("/")) return false;
+  if (name === "." || name === "..") return false;
+  return true;
+}
+
 export function joinPath(parentPath: string | null, name: string): string {
   return parentPath ? `${parentPath}/${name}` : name;
 }

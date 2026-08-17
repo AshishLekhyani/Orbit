@@ -133,10 +133,13 @@ export interface VersionWithStats {
   deletions: number;
 }
 
+export const VERSION_LIST_LIMIT = 100;
+
 export async function listVersionsWithStats(projectId: string): Promise<VersionWithStats[]> {
   const versions = await prisma.projectVersion.findMany({
     where: { projectId },
     orderBy: { createdAt: "desc" },
+    take: VERSION_LIST_LIMIT,
     select: {
       id: true,
       message: true,
@@ -148,6 +151,19 @@ export async function listVersionsWithStats(projectId: string): Promise<VersionW
 
   const chronological = [...versions].reverse();
   const runningContent = new Map<string, string>();
+
+  const oldestInWindow = chronological[0];
+  if (oldestInWindow) {
+    const baseline = await reconstructState(projectId, {
+      createdAt: oldestInWindow.createdAt,
+      inclusive: false,
+    });
+    for (const [path, entry] of baseline) {
+      if (entry.changeType !== "DELETED" && entry.content !== null) {
+        runningContent.set(path, entry.content);
+      }
+    }
+  }
   const statsByVersionId = new Map<string, { files: FileDiffSummary[]; additions: number; deletions: number }>();
 
   for (const version of chronological) {

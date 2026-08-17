@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getProjectRole, roleAtLeast } from "@/lib/auth/projectAccess";
 
+const MAX_FILE_CONTENT_CHARS = 2_000_000;
+
 interface RouteParams {
   params: Promise<{ projectId: string; fileId: string }>;
 }
@@ -48,6 +50,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   const body = await request.json().catch(() => null);
   if (!body || typeof body.content !== "string" || typeof body.yjsState !== "string") {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  if (body.content.length > MAX_FILE_CONTENT_CHARS) {
+    return NextResponse.json(
+      { error: `This file is too large to save (limit ${Math.floor(MAX_FILE_CONTENT_CHARS / 1000)}k characters).` },
+      { status: 413 },
+    );
   }
 
   const exists = await prisma.file.findFirst({ where: { id: fileId, projectId }, select: { id: true } });

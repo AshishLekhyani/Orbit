@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getProjectRole, roleAtLeast } from "@/lib/auth/projectAccess";
-import { detectFileType, joinPath } from "@/lib/fileTree";
+import { detectFileType, isValidFileName, joinPath } from "@/lib/fileTree";
 import { seedYjsState } from "@/lib/realtime/seedYjsState";
 
 interface RouteParams {
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   const parentId = typeof body?.parentId === "string" ? body.parentId : null;
   const isDirectory = Boolean(body?.isDirectory);
 
-  if (!name || name.includes("/")) {
+  if (!isValidFileName(name)) {
     return NextResponse.json({ error: "Invalid name" }, { status: 400 });
   }
 

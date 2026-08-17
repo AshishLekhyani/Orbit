@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   const projects = await prisma.project.findMany({
     where,
     orderBy: { updatedAt: "desc" },
+    take: 500,
     include: {
       _count: { select: { members: true } },
       favoritedBy: { where: { userId }, select: { id: true } },

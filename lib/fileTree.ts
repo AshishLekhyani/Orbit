@@ -1,8 +1,8 @@
 import type { File } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { detectFileType, joinPath, withCopySuffix } from "@/lib/fileMeta";
+import { detectFileType, isValidFileName, joinPath, withCopySuffix } from "@/lib/fileMeta";
 
-export { detectFileType, joinPath, withCopySuffix };
+export { detectFileType, isValidFileName, joinPath, withCopySuffix };
 
 interface MoveOrRenameResult {
   ok: true;
@@ -33,7 +33,7 @@ export async function moveOrRenameFile(
   if (!file) return { ok: false, status: 404, error: "Not found" };
 
   const nextName = changes.name?.trim() || file.name;
-  if (nextName.includes("/")) return { ok: false, status: 400, error: "Invalid name" };
+  if (!isValidFileName(nextName)) return { ok: false, status: 400, error: "Invalid name" };
 
   const parentChanging = changes.parentId !== undefined;
   const resolvedParentId = parentChanging ? changes.parentId : file.parentId;
